@@ -69,21 +69,27 @@ cd_offsets = {
 31881, -- Possessed Animals
 34040 } -- Ghosts Exposed
 
+local fm_content = 1890378
+local session_controller = 1574589
+local session_controller2 = 1575020
+local cool_down_deez_nutts = 262145
+local freemode_offset = 15368
+
 function customText(format, ...)
     local formatted_text = string.format(format, ...)
     ImGui.Text(formatted_text)
 end
 
 script.register_looped("UpdateStateAndTunas", function (script)
-	event_state = globals.get_int(1890378 + 1 + 1 + (selected_event * 15))
-	event_loc = globals.get_int(1890378 + 1 + 1 + (selected_event * 15) + 6)
-	globals.set_int(262145 + 31371, 1) -- Slashers
-	globals.set_int(262145 + 31233, 3) -- Phantom Car
-	globals.set_int(262145 + 33050, 1697101200) -- Sightseeing POSIX - Thursday, 12 October 2023 09:00:00
-	globals.set_int(262145 + 32811, 3) -- Cerberus
-	globals.set_int(262145 + 34313, 1) -- Bank Shootout
-	globals.set_int(262145 + 35065, 1) -- Possessed Animals
-	globals.set_int(262145 + 35064, 1) -- Ghosts Exposed
+	event_state = globals.get_int(fm_content + 1 + 1 + (selected_event * 15))
+	event_loc = globals.get_int(fm_content + 1 + 1 + (selected_event * 15) + 6)
+	tunables.set_int(1470797531, 1) -- Slashers
+	tunables.set_int(-167641066, 3) -- Phantom Car
+	tunables.set_int('SSP2POSIX', 1697101200) -- Sightseeing POSIX - Thursday, 12 October 2023 09:00:00
+	tunables.set_int(-2122185994, 3) -- Cerberus
+	tunables.set_int('ENABLE_MAZEBANKSHOOTOUT_DLC22022', 1) -- Bank Shootout
+	tunables.set_int('ENABLE_HALLOWEEN_POSSESSED_ANIMAL', 1) -- Possessed Animals
+	tunables.set_int('ENABLE_HALLOWEEN_GHOSTHUNT', 1) -- Ghosts Exposed
 end)
 
 random_events_tab:add_imgui(function()
@@ -92,7 +98,7 @@ random_events_tab:add_imgui(function()
 	
 	if ImGui.Button("Force Trigger") then
 		if event_state == 1 then
-			globals.set_int(1890378 + force_offsets[selected_event + 1], 1)
+			globals.set_int(fm_content + force_offsets[selected_event + 1], 1)
 		else
 			gui.show_message("Random Events", "Please wait until the cooldown ends.")
 		end
@@ -109,18 +115,18 @@ random_events_tab:add_imgui(function()
 	if ImGui.Button("Start Event (Debug)") then
 		script.run_in_fiber(function (script)
 			if (selected_event == 5) then
-				locals.set_int("freemode", 15368 + 1 + (18 * 12) + 2, 2710833)
+				locals.set_int("freemode", freemode_offset + 1 + (18 * 12) + 2, 2710833)
 				script:sleep(2000)
-				locals.set_int("freemode", 15368 + 229 + 1 + 19, event_ids[selected_event + 1])
+				locals.set_int("freemode", freemode_offset + 229 + 1 + 19, event_ids[selected_event + 1])
 				script:sleep(2000)
-				globals.set_int(1890378 + 289, PLAYER.PLAYER_ID()) -- Set yourself as selected player by Phantom Car
+				globals.set_int(fm_content + 289, PLAYER.PLAYER_ID()) -- Set yourself as selected player by Phantom Car
 				script:sleep(2000)
-				locals.set_int("freemode", 15368 + 229 + 1 + 19, 313)
+				locals.set_int("freemode", freemode_offset + 229 + 1 + 19, 313)
 			else 
-				locals.set_int("freemode", 15368 + 1 + (18 * 12) + 2, 2710833) -- Setting the active requirement. I use gooch (func_8414) because it meets the requirements for triggering all random events (default is ghosts exposed)
-				locals.set_int("freemode", 15368 + 229 + 1 + 19, event_ids[selected_event + 1])
+				locals.set_int("freemode", freemode_offset + 1 + (18 * 12) + 2, 2710833) -- Setting the active requirement. I use gooch (func_8414) because it meets the requirements for triggering all random events (default is ghosts exposed)
+				locals.set_int("freemode", freemode_offset + 229 + 1 + 19, event_ids[selected_event + 1])
 				script:sleep(2000)
-				locals.set_int("freemode", 15368 + 229 + 1 + 19, 313) -- Setting value back to ghosts exposed to avoid loop
+				locals.set_int("freemode", freemode_offset + 229 + 1 + 19, 313) -- Setting value back to ghosts exposed to avoid loop
 			end
 		end)
 		gui.show_message("Random Events", "The event has been started successfully.")
@@ -154,15 +160,15 @@ random_events_tab:add_imgui(function()
 	
 	if ImGui.Button("Set Cooldown Value") then
 		script.run_in_fiber(function (script)
-			globals.set_int(1575020, 11)
-			globals.set_int(1574589, 1)
+			globals.set_int(session_controller2, 11)
+			globals.set_int(session_controller, 1)
 			script:sleep(2000)
-			globals.set_int(1574589, 0)
+			globals.set_int(session_controller, 0)
 			script:sleep(1000)
-			globals.set_int(262145 + cd_offsets[selected_event + 1], cooldown_value)
+			globals.set_int(cool_down_deez_nutts + cd_offsets[selected_event + 1], cooldown_value)
 		end)
 	end
 	
-	customText("Current Value: %d ms", globals.get_int(262145 + cd_offsets[selected_event + 1]))
+	customText("Current Value: %d ms", globals.get_int(cool_down_deez_nutts + cd_offsets[selected_event + 1]))
 	
 end)

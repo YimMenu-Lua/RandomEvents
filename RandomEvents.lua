@@ -73,6 +73,7 @@ local fm_content = 1890378
 local session_controller = 1574589
 local session_controller2 = 1575020
 local cool_down_deez_nutts = 262145
+local freemode_offset = 15368
 
 function customText(format, ...)
     local formatted_text = string.format(format, ...)
@@ -114,18 +115,18 @@ random_events_tab:add_imgui(function()
 	if ImGui.Button("Start Event (Debug)") then
 		script.run_in_fiber(function (script)
 			if (selected_event == 5) then
-				locals.set_int("freemode", 15368 + 1 + (18 * 12) + 2, 2710833)
+				locals.set_int("freemode", freemode_offset + 1 + (18 * 12) + 2, 2710833)
 				script:sleep(2000)
-				locals.set_int("freemode", 15368 + 229 + 1 + 19, event_ids[selected_event + 1])
+				locals.set_int("freemode", freemode_offset + 229 + 1 + 19, event_ids[selected_event + 1])
 				script:sleep(2000)
 				globals.set_int(fm_content + 289, PLAYER.PLAYER_ID()) -- Set yourself as selected player by Phantom Car
 				script:sleep(2000)
-				locals.set_int("freemode", 15368 + 229 + 1 + 19, 313)
+				locals.set_int("freemode", freemode_offset + 229 + 1 + 19, 313)
 			else 
-				locals.set_int("freemode", 15368 + 1 + (18 * 12) + 2, 2710833) -- Setting the active requirement. I use gooch (func_8414) because it meets the requirements for triggering all random events (default is ghosts exposed)
-				locals.set_int("freemode", 15368 + 229 + 1 + 19, event_ids[selected_event + 1])
+				locals.set_int("freemode", freemode_offset + 1 + (18 * 12) + 2, 2710833) -- Setting the active requirement. I use gooch (func_8414) because it meets the requirements for triggering all random events (default is ghosts exposed)
+				locals.set_int("freemode", freemode_offset + 229 + 1 + 19, event_ids[selected_event + 1])
 				script:sleep(2000)
-				locals.set_int("freemode", 15368 + 229 + 1 + 19, 313) -- Setting value back to ghosts exposed to avoid loop
+				locals.set_int("freemode", freemode_offset + 229 + 1 + 19, 313) -- Setting value back to ghosts exposed to avoid loop
 			end
 		end)
 		gui.show_message("Random Events", "The event has been started successfully.")

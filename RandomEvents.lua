@@ -14,7 +14,13 @@ local availability2_value = 0
 local fm_content = 1890378
 local session_controller = 1574589
 local session_controller2 = 1575020
-local freemode_offset = 15368
+
+function force_trigger_event(event_id, event_location)
+    local arg_count = 7
+    local args = {-126218586, PLAYER.PLAYER_ID(), 1 << PLAYER.PLAYER_ID(), event_id, 0, event_location, 0}
+
+    network.trigger_script_event(1 << PLAYER.PLAYER_ID(), args)
+end
 
 function get_event_coords(event, location)
 
@@ -79,26 +85,10 @@ random_events_tab:add_imgui(function()
 	
 	ImGui.SameLine()
 	
-	if ImGui.Button("Force Trigger") then
-		if event_state == 1 then
-			globals.set_int(fm_content + force_offsets[selected_event + 1], 1)
-		else
-			gui.show_message("Random Events", "Please wait until the cooldown ends.")
-		end
-	end
-	
-	ImGui.SameLine()
-	
-	-- Event State & Location won't change if you start the event using the debug script event. Rockstar probably uses it to force-trigger random events for testing.
-	
-	if ImGui.Button("Start Event (Debug)") then
+	if ImGui.Button("Force to Spawn") then
 		script.run_in_fiber(function (script)
-			locals.set_int("freemode", freemode_offset + 1 + (18 * 12) + 2, 2710833) -- Setting the active requirement. I use gooch (func_8414) because it meets the requirements for triggering all random events (default is ghosts exposed)
-			locals.set_int("freemode", freemode_offset + 229 + 1 + 19, event_ids[selected_event + 1])
-			script:sleep(2000)
-			locals.set_int("freemode", freemode_offset + 229 + 1 + 19, 313) -- Setting value back to ghosts exposed to avoid loop
+			force_trigger_event(event_ids[selected_event + 1], 0) -- I will add an option to select the location later (completely re-design the script)
 		end)
-		gui.show_message("Random Events", "The event has been started successfully.")
 	end
 	
 	if (event_state == 0) then

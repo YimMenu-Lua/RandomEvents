@@ -4,10 +4,10 @@ random_events = {
     DRUG_VEHICLE = 0,
     MOVIE_PROPS = 1,
     GOLDEN_GUN = 2,
-	VEHICLE_LIST = 3,
+    VEHICLE_LIST = 3,
     SLASHERS = 4,
     PHANTOM_CAR = 5,
-	SIGHTSEEING = 6,
+    SIGHTSEEING = 6,
     SMUGGLER_TRAIL = 7,
     CERBERUS = 8,
     SMUGGLER_PLANE = 9,
@@ -19,13 +19,14 @@ random_events = {
     BANK_SHOOTOUT = 15,
     ARMORED_TRUCK = 16,
     POSSESSED_ANIMALS = 17,
-	GHOSTHUNT = 18,
-	XMAS_TRUCK = 19,
+    GHOSTHUNT = 18,
+    XMAS_TRUCK = 19,
 }
 
 local selected_event = 0
 local selected_loc = 0
 local set_trigger_zone = 0.0
+local enable_esp = false
 
 local event_state
 local event_loc
@@ -54,7 +55,7 @@ end
 script.register_looped("Random Events", function (script)
 	event_state = globals.get_int(gsbd_randomevents + 1 + (1 + (selected_event * 15)))
 	event_loc = globals.get_int(gsbd_randomevents + 1 + (1 + (selected_event * 15)) + 6)
-	event_coords = globals.get_vec3(gsbd_randomevents + 1 + (1 + (selected_event * 15)) + 10)
+	event_coords = globals.get_vec3(gsbd_randomevents + 1 + (1 + (selected_event * 15)) + 10) -- It gets updated every 5 seconds
 	trigger_zone = globals.get_float(gsbd_randomevents + 1 + (1 + (selected_event * 15)) + 13)
 	tunables.set_int(1470797531, 1) -- Slashers
 	tunables.set_int(-167641066, 3) -- Phantom Car
@@ -65,8 +66,11 @@ script.register_looped("Random Events", function (script)
 	tunables.set_int('ENABLE_MAZEBANKSHOOTOUT_DLC22022', 1)
 	tunables.set_int('ENABLE_HALLOWEEN_GHOSTHUNT', 1)
 	tunables.set_int('ENABLE_HALLOWEEN_POSSESSED_ANIMAL', 1)
-	tunables.set_int('ENABLE_HALLOWEEN_GHOSTHUNT', 1)
 	tunables.set_int(2093114948, 1) -- Happy Holidays Hauler
+	if enable_esp then
+		local player_coords = ENTITY.GET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), false)
+		GRAPHICS.DRAW_LINE(player_coords.x, player_coords.y, player_coords.z, event_coords.x, event_coords.y, event_coords.z, 255, 0, 0, 255)
+	end
 end)
 
 random_events_tab:add_imgui(function()	
@@ -87,20 +91,25 @@ random_events_tab:add_imgui(function()
 	if ImGui.Button("Start Event") then
 		script.run_in_fiber(function (script)
 			start_event(event_ids[selected_event + 1], selected_loc)
-			gui.show_message("Random Events", "The event has been started successfully.")
+			script:sleep(1000)
+			if event_state >= 1 then
+				gui.show_message("Random Events", "The event has been started successfully.")
+			else
+				gui.show_message("Random Events", "There has been an error while starting the event.")
+			end
 		end)
 	end
 	
 	ImGui.SameLine()
 	
-	if selected_event ~= random_events.VEHICLE_LIST and selected_event ~= random_events.PHANTOM_CAR and selected_event ~= random_events.SIGHTSEEING and selected_event ~= random_events.XMAS_MUGGER and selected_event ~= random_events.GHOSTHUNT and selected_event ~= random_events.XMAS_TRUCK then
+	if selected_event ~= random_events.PHANTOM_CAR and selected_event ~= random_events.SIGHTSEEING and selected_event ~= random_events.XMAS_MUGGER and selected_event ~= random_events.GHOSTHUNT then
 		if ImGui.Button("Teleport") then
 			if event_state >= 1 then
 				script.run_in_fiber(function (script)
 					PED.SET_PED_COORDS_KEEP_VEHICLE(PLAYER.PLAYER_PED_ID(), event_coords.x, event_coords.y, event_coords.z)
 				end)
 			else
-				gui.show_message("Random Events", "Event is not active.")
+				gui.show_message("Random Events", "The event is not active.")
 			end
 		end
 	else
@@ -114,4 +123,13 @@ random_events_tab:add_imgui(function()
 	ImGui.Text("Location: " .. (event_loc ~= -1 and event_loc or "None"))
 	ImGui.Text("Trigger Zone: " .. math.floor(trigger_zone) .. " meters")
 	ImGui.Text("State: " .. (event_state == 0 and "Waiting" or event_state == 1 and "Ready" or event_state == 2 and "Triggered" or "None"))
+	
+	if event_state ~= 0 and selected_event ~= random_events.PHANTOM_CAR and selected_event ~= random_events.SIGHTSEEING and selected_event ~= random_events.XMAS_MUGGER and selected_event ~= random_events.GHOSTHUNT then
+		enable_esp = ImGui.Checkbox("ESP", enable_esp)
+	else
+		enable_esp = false
+		ImGui.BeginDisabled()
+		ImGui.Checkbox("ESP", enable_esp)
+		ImGui.EndDisabled()
+	end
 end)

@@ -13,7 +13,7 @@ random_events = {
     SMUGGLER_PLANE = 9,
     CRIME_SCENE = 10,
     METAL_DETECTOR = 11,
-    CONVOY = 12,
+    GANG_CONVOY = 12,
     STORE_ROBBERY = 13,
     XMAS_MUGGER = 14,
     BANK_SHOOTOUT = 15,
@@ -32,7 +32,7 @@ local event_state
 local event_loc
 local event_coords
 local trigger_zone
-local event_ids = { 24, 26, 259, 273, 270, 269, 275, 286, 287, 266, 147, 268, 288, 290, 310, 311, 312, 320, 313, 323 }
+local fmmc_types = { 24, 26, 259, 273, 270, 269, 275, 286, 287, 266, 147, 268, 288, 290, 310, 311, 312, 320, 313, 323 }
 local event_hash = -126218586
 local gsbd_randomevents = 1882037
 
@@ -57,12 +57,12 @@ script.register_looped("Random Events", function (script)
 	event_loc = globals.get_int(gsbd_randomevents + 1 + (1 + (selected_event * 15)) + 6)
 	event_coords = globals.get_vec3(gsbd_randomevents + 1 + (1 + (selected_event * 15)) + 10) -- It gets updated every 5 seconds
 	trigger_zone = globals.get_float(gsbd_randomevents + 1 + (1 + (selected_event * 15)) + 13)
-	tunables.set_int(1470797531, 1) -- Slashers
-	tunables.set_int(-167641066, 3) -- Phantom Car
+	tunables.set_int('StandardControllerVolume', 1) -- Slashers
+	tunables.set_int('StandardTargettingTime', 1) -- Phantom Car
 	tunables.set_int('SSP2POSIX', 1697101200)
 	tunables.set_int('ENABLE_SU22_SMUGGLER_TRAIL', 1) -- R* has disabled it in 1.68 for some reason (was too buggy?)
-	tunables.set_int(-2122185994, 1) -- Cerberus
-	tunables.set_int(-2035583969, 1) -- Gooch
+	tunables.set_int('NC_SOURCE_TRUCK_HEAD_COUNT', 3) -- Cerberus
+	tunables.set_int('STANDARD_KEYBIND_SELECTION', 1) -- Gooch
 	tunables.set_int('ENABLE_MAZEBANKSHOOTOUT_DLC22022', 1)
 	tunables.set_int('ENABLE_HALLOWEEN_GHOSTHUNT', 1)
 	tunables.set_int('ENABLE_HALLOWEEN_POSSESSED_ANIMAL', 1)
@@ -90,7 +90,7 @@ random_events_tab:add_imgui(function()
 	
 	if ImGui.Button("Start Event") then
 		script.run_in_fiber(function (script)
-			start_event(event_ids[selected_event + 1], selected_loc)
+			start_event(fmmc_types[selected_event + 1], selected_loc)
 			script:sleep(1000)
 			if event_state >= 1 then
 				gui.show_message("Random Events", "The event has been started successfully.")

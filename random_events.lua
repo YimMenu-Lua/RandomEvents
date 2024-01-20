@@ -1,4 +1,4 @@
-random_events_tab = gui.get_tab("Random Events")
+random_events_tab = gui.get_tab("GUI_TAB_NETWORK"):add_tab("Random Events")
 
 random_events = {
     DRUG_VEHICLE = 0,
@@ -66,6 +66,7 @@ local num_active_events
 local max_events
 local event_cooldown
 local event_availability
+local time_spent_in_session = ""
 
 function help_marker(text)
     ImGui.SameLine()
@@ -77,6 +78,18 @@ function help_marker(text)
         ImGui.PopTextWrapPos()
         ImGui.EndTooltip()
 	end
+end
+
+function get_time_spent_in_session()
+	milliseconds = NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_NETWORK_TIME(), globals.get_int(2750546 + 85 + 3))
+	
+	local total_seconds = math.floor(milliseconds / 1000)
+	local hours = math.floor(total_seconds / 3600)
+	local minutes = math.floor((total_seconds % 3600) / 60)
+	local seconds = total_seconds % 60
+	local formatted = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+	
+	return formatted
 end
 
 function get_num_active_events()
@@ -159,6 +172,11 @@ script.register_looped("Random Events", function(script)
 	max_events = tunables.get_int("FMREMAXACTIVATEDEVENTS")
 	event_cooldown = get_event_cooldown(selected_event + 1)
 	event_availability = get_event_availability(selected_event + 1)
+	if SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat("freemode")) ~= 0 then
+		time_spent_in_session = get_time_spent_in_session()
+	else
+		time_spent_in_session = "00:00:00"
+	end
 	
 	tunables.set_int("STANDARDCONTROLLERVOLUME", enable_special_events and 1 or -1) -- Slashers
 	tunables.set_int("STANDARDTARGETTINGTIME", enable_special_events and 1 or -1) -- Phantom Car
@@ -289,6 +307,8 @@ random_events_tab:add_imgui(function()
 	help_marker("Enables the special events that are normally disabled:\n- Slashers\n- Phantom Car\n- Sightseeing\n- Smuggler Trail\n- Cerberus\n- Gooch\n- Weazel Bank Shootout\n- Ghosts Exposed\n- Possessed Animals\n- Happy Holidays Hauler")
 	
 	ImGui.Separator()
+	
+	ImGui.Text("Time Spent in Session: " .. time_spent_in_session)
 	
 	ImGui.Text("State: " .. (event_state == 0 and "Inactive" or event_state == 1 and "Available" or event_state == 2 and "Active" or event_state == 3 and "Cleanup" or "None"))
 	help_marker("Indicates the current state of the event:\n- Inactive\n- Available\n- Active\n- Cleanup")

@@ -5,7 +5,7 @@ random_events = {
     MOVIE_PROPS = 1,
     GOLDEN_GUN = 2,
     VEHICLE_LIST = 3,
-    SLASHERS = 4,
+    SLASHER = 4,
     PHANTOM_CAR = 5,
     SIGHTSEEING = 6,
     SMUGGLER_TRAIL = 7,
@@ -14,7 +14,7 @@ random_events = {
     CRIME_SCENE = 10,
     METAL_DETECTOR = 11,
     CONVOY = 12,
-    STORE_ROBBERY = 13,
+    ROBBERY = 13,
     XMAS_MUGGER = 14,
     BANK_SHOOTOUT = 15,
     ARMOURED_TRUCK = 16,
@@ -57,6 +57,7 @@ local blip_ranges = { 200, nil, 200, nil, nil, nil, nil, 400, nil, nil, 200, 200
 local request_random_event_hash = -126218586
 local gsbd_random_events = 1882037
 local gpbd_fm_2 = 1882422
+local mp_timers = 2750546
 
 local event_state
 local event_loc
@@ -257,14 +258,18 @@ random_events_tab:add_imgui(function()
 	end
 	help_marker("Indicates the current number of active events out of the maximum allowed.")
 	
-	if ImGui.Button("Start Event") then
+	if ImGui.Button("Launch Event") then
 		script.run_in_fiber(function(script)
-			request_random_event(fmmc_types[selected_event + 1], selected_loc)
-			script:sleep(1000)
-			if event_state >= 1 then
-				gui.show_message("Random Events", "The event has been started successfully.")
+			if event_state ~= 2 then
+				request_random_event(fmmc_types[selected_event + 1], selected_loc)
+				script:sleep(1000)
+				if event_state >= 1 and event_loc == selected_loc then
+					gui.show_message("Random Events", "The event has been launched successfully.")
+				else
+					gui.show_message("Random Events", "There has been an error while launching the event.")
+				end
 			else
-				gui.show_message("Random Events", "There has been an error while starting the event.")
+				gui.show_message("Random Events", "The event is already active.")
 			end
 		end)
 	end
@@ -272,7 +277,7 @@ random_events_tab:add_imgui(function()
 	ImGui.SameLine()
 	
 	if selected_event ~= random_events.PHANTOM_CAR and selected_event ~= random_events.SIGHTSEEING and selected_event ~= random_events.XMAS_MUGGER and selected_event ~= random_events.GHOSTHUNT then
-		if ImGui.Button("Teleport") then
+		if ImGui.Button("Teleport to Event") then
 			script.run_in_fiber(function(script)
 				if event_state >= 1 then
 					if event_coords ~= vec3:new(0.0, 0.0, 0.0) then

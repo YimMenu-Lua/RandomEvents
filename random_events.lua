@@ -1,6 +1,6 @@
 random_events_tab = gui.get_tab("GUI_TAB_NETWORK"):add_tab("Random Events")
 
-random_events = {
+re = {
     DRUG_VEHICLE = 0,
     MOVIE_PROPS = 1,
     GOLDEN_GUN = 2,
@@ -23,7 +23,14 @@ random_events = {
     XMAS_TRUCK = 19
 }
 
-random_event_display_names = {
+re_states = {
+	INACTIVE = 0,
+	AVAILABLE = 1,
+	ACTIVE = 2,
+	CLEANUP = 3
+}
+
+re_names = {
     "Drug Vehicle",
     "Movie Props",
     "Sleeping Guard",
@@ -47,9 +54,11 @@ random_event_display_names = {
 }
 
 selected_event = 0
+selected_target = 1
 selected_loc = 0
 enable_esp = false
 enable_special_events = true
+set_target_player = false
 
 local fmmc_types = { 24, 26, 259, 273, 270, 269, 275, 286, 287, 266, 147, 268, 288, 290, 310, 311, 312, 320, 313, 323 }
 local max_locations = { 29, 8, 9, 49, 7, 0, 25, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 8, 0 }
@@ -63,34 +72,16 @@ local event_state
 local event_loc
 local event_coords
 local trigger_range
+local target_id = 0
 local num_active_events
 local max_events
 local event_cooldown
 local event_availability
 local time_spent_in_session = ""
 
-function help_marker(text)
-    ImGui.SameLine()
-	ImGui.TextDisabled("(?)")
-    if ImGui.IsItemHovered() then
-        ImGui.BeginTooltip()
-        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35)
-        ImGui.TextUnformatted(text)
-        ImGui.PopTextWrapPos()
-        ImGui.EndTooltip()
-	end
-end
-
-function get_time_spent_in_session()
-	milliseconds = NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_NETWORK_TIME(), globals.get_int(2750546 + 85 + 3))
-	
-	local total_seconds = math.floor(milliseconds / 1000)
-	local hours = math.floor(total_seconds / 3600)
-	local minutes = math.floor((total_seconds % 3600) / 60)
-	local seconds = total_seconds % 60
-	local formatted = string.format("%02d:%02d:%02d", hours, minutes, seconds)
-	
-	return formatted
+function request_random_event(event_id, event_location)
+    local args = {request_random_event_hash, 0, -1, event_id, 0, event_location, 0}
+    network.trigger_script_event(-1, args)
 end
 
 function get_num_active_events()
@@ -112,7 +103,7 @@ function get_event_cooldown(event)
 		tunables.get_int("SUM22_RE_GOLDEN_GUN_INACTIVE_TIME"),
 		tunables.get_int("SUM22_RE_VEHICLE_LIST_INACTIVE_TIME"),
 		tunables.get_int("STANDARDCONTROLLERVOLUME_COOLDOWN"),
-		tunables.get_int("STANDARDTARGETTINGTIME"),
+		tunables.get_int("STANDARDTARGETTINGTIME_COOLDOWN"),
 		tunables.get_int("SSP2_COOLDOWN"),
 		tunables.get_int("SUM22_RE_SMUGGLER_TRAIL_INACTIVE_TIME"),
 		tunables.get_int("NC_SOURCE_TRUCK_COOLDOWN"),
@@ -159,10 +150,55 @@ function get_event_availability(event)
 	return availabilities[event]
 end
 
-function request_random_event(event_id, event_location)
-    local args = {request_random_event_hash, 0, -1, event_id, 0, event_location, 0}
-    network.trigger_script_event(-1, args)
+function get_targets()
+    local player_table = {}
+
+    for i = 0, 31 do
+        local player_name = PLAYER.GET_PLAYER_NAME(i)
+        if player_name ~= "**Invalid**" then
+            table.insert(player_table, {id = i, name = player_name})
+        end
+    end
+
+    return player_table
 end
+
+function is_event_exception()
+    return selected_event == re.PHANTOM_CAR or selected_event == re.SIGHTSEEING or selected_event == re.XMAS_MUGGER or selected_event == re.GHOSTHUNT
+end
+
+function get_time_spent_in_session()
+	milliseconds = NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_NETWORK_TIME(), globals.get_int(mp_timers + 85 + 3))
+	
+	local total_seconds = math.floor(milliseconds / 1000)
+	local hours = math.floor(total_seconds / 3600)
+	local minutes = math.floor((total_seconds % 3600) / 60)
+	local seconds = total_seconds % 60
+	local formatted = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+	
+	return formatted
+end
+
+function is_freemode_active()
+	return SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat("freemode")) ~= 0
+end
+
+function help_marker(text)
+    ImGui.SameLine()
+	ImGui.TextDisabled("(?)")
+    if ImGui.IsItemHovered() then
+        ImGui.BeginTooltip()
+        ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35)
+        ImGui.TextUnformatted(text)
+        ImGui.PopTextWrapPos()
+        ImGui.EndTooltip()
+	end
+end
+
+event.register_handler(menu_event.PlayerMgrInit, function()
+	selected_target = 1
+	target_id = 0
+end)
 
 script.register_looped("Random Events", function(script)
 	event_state = globals.get_int(gsbd_random_events + 1 + (1 + (selected_event * 15)))
@@ -173,22 +209,24 @@ script.register_looped("Random Events", function(script)
 	max_events = tunables.get_int("FMREMAXACTIVATEDEVENTS")
 	event_cooldown = get_event_cooldown(selected_event + 1)
 	event_availability = get_event_availability(selected_event + 1)
-	if SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat("freemode")) ~= 0 then
-		time_spent_in_session = get_time_spent_in_session()
-	else
-		time_spent_in_session = "00:00:00"
-	end
+	time_spent_in_session = get_time_spent_in_session()
 	
-	tunables.set_int("STANDARDCONTROLLERVOLUME", enable_special_events and 1 or -1) -- Slashers
-	tunables.set_int("STANDARDTARGETTINGTIME", enable_special_events and 1 or -1) -- Phantom Car
-	tunables.set_int("SSP2POSIX", enable_special_events and 1697101200 or -1) -- Thursday, 12 October 2023 09:00:00 GMT
-	tunables.set_bool("ENABLE_SU22_SMUGGLER_TRAIL", enable_special_events) -- R* has disabled it in 1.68 for some reason (was too buggy?)
-	tunables.set_int("NC_SOURCE_TRUCK_HEAD_COUNT", enable_special_events and 3 or 1) -- Cerberus
-	tunables.set_int("STANDARD_KEYBIND_SELECTION", enable_special_events and 1 or -1) -- Gooch
-	tunables.set_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022", enable_special_events)
-	tunables.set_bool("ENABLE_HALLOWEEN_GHOSTHUNT", enable_special_events)
-	tunables.set_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL", enable_special_events)
-	tunables.set_bool(2093114948, enable_special_events) -- Happy Holidays Hauler
+	if set_target_player then
+		globals.set_int(gsbd_random_events + 304, target_id) -- Phantom Car Target (Also the Slasher target, but it doesn't work)
+		globals.set_int(gsbd_random_events + 304 + 1, target_id) -- Gooch Target
+	end	
+	if enable_special_events then
+		tunables.set_int("STANDARDCONTROLLERVOLUME", 1) -- Slashers
+		tunables.set_int("STANDARDTARGETTINGTIME", 1) -- Phantom Car
+		tunables.set_int("SSP2POSIX", 1697101200) -- Thursday, 12 October 2023 09:00:00 GMT
+		tunables.set_bool("ENABLE_SU22_SMUGGLER_TRAIL", true) -- R* has disabled it in 1.68 for some reason (was too buggy?)
+		tunables.set_int("NC_SOURCE_TRUCK_HEAD_COUNT", 3) -- Cerberus
+		tunables.set_int("STANDARD_KEYBIND_SELECTION", 1) -- Gooch
+		tunables.set_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022", true)
+		tunables.set_bool("ENABLE_HALLOWEEN_GHOSTHUNT", true)
+		tunables.set_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL", true)
+		tunables.set_bool(2093114948, true) -- Happy Holidays Hauler
+	end
 	
 	if enable_esp and event_coords ~= vec3:new(0.0, 0.0, 0.0) then
 		local player_coords = ENTITY.GET_ENTITY_COORDS(PLAYER.PLAYER_PED_ID(), false)
@@ -203,7 +241,7 @@ script.register_looped("Random Events", function(script)
 		GRAPHICS.REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", false)
 		GRAPHICS.DRAW_SPRITE("CommonMenu", "Common_Medal", screen_coords_x, screen_coords_y, 0.03, 0.06, 0.0, 93, 182, 229, 255, false, 0)
 		HUD.BEGIN_TEXT_COMMAND_DISPLAY_TEXT("STRING")
-		HUD.ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(string.format("%s (%.2f%s)", (event_state == 2 and "~HUD_COLOUR_GREEN~" or "") .. random_event_display_names[selected_event + 1] .. "~s~", formatted_distance, km_or_m))
+		HUD.ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(string.format("%s (%.2f%s)", (event_state == re_states.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. re_names[selected_event + 1] .. "~s~", formatted_distance, km_or_m))
 		HUD.SET_TEXT_RENDER_ID(1)
 		HUD.SET_TEXT_OUTLINE()
 		HUD.SET_TEXT_CENTRE(true)
@@ -220,8 +258,8 @@ script.register_looped("Random Events", function(script)
 end)
 
 random_events_tab:add_imgui(function()
-	if ImGui.BeginCombo("Select Event", random_event_display_names[selected_event + 1]) then
-		for i = 1, #random_event_display_names do
+	if ImGui.BeginCombo("Select Event", re_names[selected_event + 1]) then
+		for i = 1, #re_names do
 			local state = globals.get_int(gsbd_random_events + 1 + (1 + ((i - 1) * 15)))
 			
 			if state == 0 then
@@ -232,7 +270,7 @@ random_events_tab:add_imgui(function()
 				ImGui.PushStyleColor(ImGuiCol.Text, 0, 1, 0, 1)
 			end
 
-			if ImGui.Selectable(random_event_display_names[i], i - 1 == selected_event) then
+			if ImGui.Selectable(re_names[i], i - 1 == selected_event) then
 				selected_event = i - 1
 				selected_loc = 0
 			end
@@ -243,16 +281,35 @@ random_events_tab:add_imgui(function()
 		ImGui.EndCombo()
 	end
 	
-	selected_loc, modified = ImGui.InputInt("Select Location (0-" .. max_locations[selected_event + 1] .. ")", selected_loc)
+	if set_target_player and selected_event == re.PHANTOM_CAR or selected_event == re.XMAS_MUGGER then
+		selected_target = math.max(1, math.min(selected_target, #get_targets()))
+
+		if ImGui.BeginCombo("Select Target", #get_targets() > 0 and get_targets()[selected_target].name or "NONE") then
+			for i, player_info in ipairs(get_targets()) do
+				if ImGui.Selectable(player_info.name .. " (ID: " .. player_info.id .. ")", i == selected_target) then
+					selected_target = i
+					target_id = player_info.id
+				end
+			end
+			
+			ImGui.EndCombo()
+		end
+	end
 	
-	if modified then
-		selected_loc = math.min(math.max(selected_loc, 0), max_locations[selected_event + 1])
+	if not is_event_exception() and selected_event ~= re.VEHICLE_LIST and selected_event ~= re.BANK_SHOOTOUT and selected_event ~= re.XMAS_TRUCK then
+		selected_loc, modified = ImGui.InputInt("Select Location (0-" .. max_locations[selected_event + 1] .. ")", selected_loc)
+		
+		if modified then
+			selected_loc = math.min(math.max(selected_loc, 0), max_locations[selected_event + 1])
+		end
+	else
+		ImGui.BeginDisabled()
+		ImGui.InputInt("Select Location (0-" .. max_locations[selected_event + 1] .. ")", selected_loc)
+		ImGui.EndDisabled()
 	end
 	
 	if num_active_events >= max_events then
-		ImGui.Text("Active Events: ")
-		ImGui.SameLine()
-		ImGui.TextColored(1, 0, 0, 1, num_active_events .. "/" .. max_events)
+		ImGui.TextColored(1, 0, 0, 1, "Active Events: " .. num_active_events .. "/" .. max_events)
 	else
 		ImGui.Text("Active Events: " .. num_active_events .. "/" .. max_events)
 	end
@@ -260,10 +317,14 @@ random_events_tab:add_imgui(function()
 	
 	if ImGui.Button("Launch Event") then
 		script.run_in_fiber(function(script)
-			if event_state ~= 2 then
+			if NETWORK.NETWORK_GET_HOST_OF_SCRIPT("freemode", -1, 0) ~= PLAYER.PLAYER_ID() then
+				network.force_script_host("freemode")
+				script:sleep(1000)
+			end
+			if event_state ~= re_states.ACTIVE then
 				request_random_event(fmmc_types[selected_event + 1], selected_loc)
 				script:sleep(1000)
-				if event_state >= 1 and event_loc == selected_loc then
+				if event_state >= re_states.AVAILABLE and event_loc == selected_loc then
 					gui.show_message("Random Events", "The event has been launched successfully.")
 				else
 					gui.show_message("Random Events", "There has been an error while launching the event.")
@@ -276,10 +337,10 @@ random_events_tab:add_imgui(function()
 	
 	ImGui.SameLine()
 	
-	if selected_event ~= random_events.PHANTOM_CAR and selected_event ~= random_events.SIGHTSEEING and selected_event ~= random_events.XMAS_MUGGER and selected_event ~= random_events.GHOSTHUNT then
+	if not is_event_exception() then
 		if ImGui.Button("Teleport to Event") then
 			script.run_in_fiber(function(script)
-				if event_state >= 1 then
+				if event_state >= re_states.AVAILABLE then
 					if event_coords ~= vec3:new(0.0, 0.0, 0.0) then
 						PED.SET_PED_COORDS_KEEP_VEHICLE(PLAYER.PLAYER_PED_ID(), event_coords.x, event_coords.y, event_coords.z)
 					else
@@ -292,13 +353,13 @@ random_events_tab:add_imgui(function()
 		end
 	else
 		ImGui.BeginDisabled()
-		ImGui.Button("Teleport")
+		ImGui.Button("Teleport to Event")
 		ImGui.EndDisabled()
 	end
 	
 	ImGui.Separator()
 	
-	if event_state ~= 0 and selected_event ~= random_events.PHANTOM_CAR and selected_event ~= random_events.SIGHTSEEING and selected_event ~= random_events.XMAS_MUGGER and selected_event ~= random_events.GHOSTHUNT then
+	if not is_event_exception() and event_state ~= re_states.INACTIVE then
 		enable_esp = ImGui.Checkbox("ESP", enable_esp)
 		help_marker("Displays information about the event graphically:\n- The green sphere represents the trigger range\n- The blue sphere represents the blip appearance range (if applicable)")
 	else
@@ -308,23 +369,42 @@ random_events_tab:add_imgui(function()
 		ImGui.EndDisabled()
 	end
 	
-	enable_special_events = ImGui.Checkbox("Enable Special Events", enable_special_events)
+	enable_special_events, pressed = ImGui.Checkbox("Enable Special Events", enable_special_events)
 	help_marker("Enables the special events that are normally disabled:\n- Slashers\n- Phantom Car\n- Sightseeing\n- Smuggler Trail\n- Cerberus\n- Gooch\n- Weazel Bank Shootout\n- Ghosts Exposed\n- Possessed Animals\n- Happy Holidays Hauler")
 	
+	if pressed then
+		if not enable_special_events then
+			-- Restore the values
+			tunables.set_int("STANDARDCONTROLLERVOLUME", -1)
+			tunables.set_int("STANDARDTARGETTINGTIME", -1)
+			tunables.set_int("SSP2POSIX", -1)
+			tunables.set_bool("ENABLE_SU22_SMUGGLER_TRAIL", false)
+			tunables.set_int("NC_SOURCE_TRUCK_HEAD_COUNT", 1)
+			tunables.set_int("STANDARD_KEYBIND_SELECTION", -1)
+			tunables.set_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022", false)
+			tunables.set_bool("ENABLE_HALLOWEEN_GHOSTHUNT", false)
+			tunables.set_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL", false)
+			tunables.set_bool(2093114948, false)		
+		end
+	end
+	
+	set_target_player = ImGui.Checkbox("Set Target Player", set_target_player)
+	help_marker("Allows you to set the target of Phantom Car and Gooch.")
+	
 	ImGui.Separator()
+		
+	if is_freemode_active() then ImGui.Text("Time Spent in Session: " .. time_spent_in_session) end
 	
-	ImGui.Text("Time Spent in Session: " .. time_spent_in_session)
-	
-	ImGui.Text("State: " .. (event_state == 0 and "Inactive" or event_state == 1 and "Available" or event_state == 2 and "Active" or event_state == 3 and "Cleanup" or "None"))
+	ImGui.Text("State: " .. (event_state == re_states.INACTIVE and "Inactive" or event_state == re_states.AVAILABLE and "Available" or event_state == re_states.ACTIVE and "Active" or event_state == re_states.CLEANUP and "Cleanup" or "None"))
 	help_marker("Indicates the current state of the event:\n- Inactive\n- Available\n- Active\n- Cleanup")
 	
 	ImGui.Text("Location: " .. (event_loc ~= -1 and event_loc or "None"))
 	help_marker("Shows the current location of the event or indicates 'None' if no location is available.")
 	
-	ImGui.Text("Trigger Range: " .. (event_state >= 1 and math.floor(trigger_range) .. " meters" or "None"))
+	ImGui.Text("Trigger Range: " .. (event_state >= re_states.AVAILABLE and math.floor(trigger_range) .. " meters" or "None"))
 	help_marker("Specifies the distance required to trigger the event when available, or shows 'None' if the event is inactive.")
 	
-	ImGui.Text("Blip Appearance Range: " .. ((event_state >= 1 and blip_ranges[selected_event + 1] ~= nil) and math.floor(blip_ranges[selected_event + 1]) .. " meters" or "None"))
+	ImGui.Text("Blip Appearance Range: " .. ((event_state >= re_states.AVAILABLE and blip_ranges[selected_event + 1] ~= nil) and math.floor(blip_ranges[selected_event + 1]) .. " meters" or "None"))
 	help_marker("Specifies the distance for the blip to appear when approaching the event, or shows 'None' if not applicable.")
 	
 	ImGui.Text("Cooldown: " .. event_cooldown .. "ms (" .. math.floor(event_cooldown / 60000) .. " minutes)")

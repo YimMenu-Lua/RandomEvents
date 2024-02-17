@@ -51,102 +51,57 @@ re_data = {
         "Ghosts Exposed",
         "Happy Holidays Hauler"
     },
-    cooldowns = {
-        tunables = {
-            "SUM22_RE_DRUG_VEHICLE_INACTIVE_TIME",
-            "SUM22_RE_MOVIE_PROPS_INACTIVE_TIME",
-            "SUM22_RE_GOLDEN_GUN_INACTIVE_TIME",
-            "SUM22_RE_VEHICLE_LIST_INACTIVE_TIME",
-            "STANDARDCONTROLLERVOLUME_COOLDOWN",
-            "STANDARDTARGETTINGTIME_COOLDOWN",
-            "SSP2_COOLDOWN",
-            "SUM22_RE_SMUGGLER_TRAIL_INACTIVE_TIME",
-            "NC_SOURCE_TRUCK_COOLDOWN",
-            "SUM22_RE_SMUGGLER_PLANE_INACTIVE_TIME",
-            "SUM22_RE_CRIME_SCENE_INACTIVE_TIME",
-            "SUM22_RE_METAL_DETECTOR_INACTIVE_TIME",
-            "XM22_RE_GANG_CONVOY_INACTIVE_TIME",
-            "XM22_RE_ROBBERY_INACTIVE_TIME",
-            "STANDARD_KEYBIND_COOLDOWN",
-            "XM22_RE_BANK_SHOOTOUT_INACTIVE_TIME",
-            296417, -- Global_262145.f_34272 - Armored Truck (doesn't have a tunable)
-            "STANDARDCONTROLLERVOLUME_COOLDOWN",
-            "SUM23_RE_GHOSTHUNT_INACTIVE_TIME",
-            "XMAS_TRUCK_INACTIVE_TIME"
-        },
-        defaults = {
-			1800000, 900000, 1200000, 90000,
-			960000, 960000, 300000, 1200000,
-			960000, 2100000, 1800000, 1320000,
-			1200000, 1200000, 2880000, 1200000,
-			1200000, 960000, 1000, 3600000
-		}
-    },
-    availabilities = {
-        tunables = {
-            "SUM22_RE_DRUG_VEHICLE_AVAILABLE_TIME",
-            "SUM22_RE_MOVIE_PROPS_AVAILABLE_TIME",
-            "SUM22_RE_GOLDEN_GUN_AVAILABLE_TIME",
-            "SUM22_RE_VEHICLE_LIST_AVAILABLE_TIME",
-            "STANDARDCONTROLLERVOLUME_AVAILABILITY",
-            "STANDARDTARGETTINGTIME_AVAILABILITY",
-            "SSP2_AVAILABILITY",
-            "SUM22_RE_SMUGGLER_TRAIL_AVAILABLE_TIME",
-            "NC_SOURCE_TRUCK_AVAILABILITY",
-            "SUM22_RE_SMUGGLER_PLANE_AVAILABLE_TIME",
-            "SUM22_RE_CRIME_SCENE_AVAILABLE_TIME",
-            "SUM22_RE_METAL_DETECTOR_AVAILABLE_TIME",
-            "XM22_RE_GANG_CONVOY_AVAILABLE_TIME",
-            "XM22_RE_ROBBERY_AVAILABLE_TIME",
-            "STANDARD_KEYBIND_AVAILABILITY",
-            "XM22_RE_BANK_SHOOTOUT_AVAILABLE_TIME",
-            296418, -- Global_262145.f_34273 - Armored Truck (doesn't have a tunable)
-            "STANDARDCONTROLLERVOLUME_AVAILABILITY",
-            "SUM23_RE_GHOSTHUNT_AVAILABLE_TIME",
-            "XMAS_TRUCK_AVAILABLE_TIME"
-        },
-        defaults = {
-			900000, 600000, 600000, 900000,
-			1200000, 1200000, 1200000, 600000,
-			1200000, 600000, 900000, 600000,
-			600000, 600000, 1200000, 600000,
-			600000, 1200000, 119000, 1800000	
-		}
-    }
+	cd_defaults = {
+	   1800000, 900000, 1200000, 90000,
+	   960000, 960000, 300000, 1200000,
+	   960000, 2100000, 1800000, 1320000,
+	   1200000, 1200000, 2880000, 1200000,
+	   1200000, 960000, 1000, 3600000	
+	},
+	ab_defaults = {
+	   900000, 600000, 600000, 900000,
+	   1200000, 1200000, 1200000, 600000,
+	   1200000, 600000, 900000, 600000,
+	   600000, 600000, 1200000, 600000,
+	   600000, 1200000, 119000, 1800000	
+	}
 }
 
 selected_event = 0
 selected_target = 1
 selected_loc = 0
-set_cd = re_data.cooldowns.defaults[selected_event + 1]
-set_ab = re_data.availabilities.defaults[selected_event + 1]
+set_cd = re_data.cd_defaults[selected_event + 1]
+set_ab = re_data.ab_defaults[selected_event + 1]
 enable_esp = false
 enable_line = true
 enable_spheres = true
 disable_all_events = false
 enable_special_events = true
 set_target_player = false
+enable_notifications = true
+notified_events = {}
 
 local fmmc_types = { 24, 26, 259, 273, 270, 269, 275, 286, 287, 266, 147, 268, 288, 290, 310, 311, 312, 320, 313, 323 }
 local max_locations = { 29, 8, 9, 49, 7, 0, 25, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 8, 0 }
 local blip_ranges = { 200, nil, 200, nil, nil, nil, nil, 400, nil, nil, 200, 200, 200, 100, nil, nil, 200, nil, nil, nil }
 local request_re_hash = -126218586
 local gsbd_re = 1882037
+local gsbd = 2648918
 local gpbd_fm_2 = 1882422
-local mp_timers = 2648918
+local fmre_data = 15544
 
-local re_initialized
-local event_state
-local event_loc
-local event_coords
-local trigger_range
+local re_initialized = false
+local event_state = re_data.states.INACTIVE
+local event_loc = 0
+local event_coords = vec3:new(0.0, 0.0, 0.0)
+local trigger_range = 0.0
 local target_id = 0
 local num_entities = {}
-local num_active_events
+local num_active_events = 0
 local max_entities = {}
-local max_events
-local event_cooldown
-local event_availability
+local max_events = 0
+local event_cooldown = 0
+local event_availability = 0
 local session_time = ""
 
 function request_random_event(event_id, event_location)
@@ -164,22 +119,6 @@ function get_num_active_events()
     end
     
     return num_events
-end
-
-function get_event_cooldown(event)
-	if event == re_data.instances.ARMOURED_TRUCK + 1 then
-		return globals.get_int(re_data.cooldowns.tunables[event])
-	else
-		return tunables.get_int(re_data.cooldowns.tunables[event])
-	end
-end
-
-function get_event_availability(event)	
-	if event == re_data.instances.ARMOURED_TRUCK + 1 then
-		return globals.get_int(re_data.availabilities.tunables[event])
-	else
-		return tunables.get_int(re_data.availabilities.tunables[event])
-	end
 end
 
 function get_targets()
@@ -200,7 +139,7 @@ function is_event_exception()
 end
 
 function get_session_time()
-    local seconds = tonumber(NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_CLOUD_TIME_AS_INT(), globals.get_int(mp_timers + 1)))
+    local seconds = tonumber(NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_CLOUD_TIME_AS_INT(), globals.get_int(gsbd + 1)))
     if seconds <= 0 then
         return "00:00:00"
     else
@@ -226,7 +165,7 @@ function help_marker(text)
 end
 
 function looped_update_re_info()
-	re_initialized = globals.get_int(gpbd_fm_2 + (1 + (self.get_id() * 142)) + 78)
+	re_initialized = globals.get_int(gpbd_fm_2 + (1 + (self.get_id() * 142)) + 78) == 1
 	event_state = globals.get_int(gsbd_re + 1 + (1 + (selected_event * 15)))
 	event_loc = globals.get_int(gsbd_re + 1 + (1 + (selected_event * 15)) + 6)
 	event_coords = globals.get_vec3(gsbd_re + 1 + (1 + (selected_event * 15)) + 10) -- It gets updated every 5 seconds
@@ -239,8 +178,8 @@ function looped_update_re_info()
 	max_entities[2] = tunables.get_int("FMREMAXRESERVEDVEHICLES")
 	max_entities[3] = tunables.get_int("FMREMAXRESERVEDOBJECTS")
 	max_events = tunables.get_int("FMREMAXACTIVATEDEVENTS")
-	event_cooldown = get_event_cooldown(selected_event + 1)
-	event_availability = get_event_availability(selected_event + 1)
+	event_cooldown = locals.get_int("freemode", fmre_data + (1 + (selected_event * 12)) + 6)
+	event_availability = locals.get_int("freemode", fmre_data + (1 + (selected_event * 12)) + 7)
 	session_time = get_session_time()
 	
 	if disable_all_events then
@@ -277,13 +216,28 @@ function looped_update_re_info()
 		tunables.set_int("NC_SOURCE_TRUCK_HEAD_COUNT", 3) -- Cerberus
 		tunables.set_int("STANDARD_KEYBIND_SELECTION", 1) -- Gooch
 		tunables.set_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022", true)
-		tunables.set_int("ENABLE_HALLOWEEN_GHOSTHUNT", 1)
 		tunables.set_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL", true)
+		tunables.set_int("ENABLE_HALLOWEEN_GHOSTHUNT", 1)
 		tunables.set_bool(2093114948, true) -- Happy Holidays Hauler
 	end
 end
 
-function looped_draw_esp()
+function looped_notify_player()
+    for i = 0, 19 do
+        local state = globals.get_int(gsbd_re + 1 + (1 + (i * 15)))
+        
+        if state == re_data.states.AVAILABLE then
+            if not notified_events[i] then
+                gui.show_message("Random Events", "" .. re_data.names[i + 1] .. " is available.")
+                notified_events[i] = true
+            end
+        elseif state ~= re_data.states.AVAILABLE and notified_events[i] then
+            notified_events[i] = false
+        end
+    end
+end
+
+function looped_render_esp()
 	local distance = MISC.GET_DISTANCE_BETWEEN_COORDS(self.get_pos().x, self.get_pos().y, self.get_pos().z, event_coords.x, event_coords.y, event_coords.z, false)
 	local km_or_m = (distance < 1000) and "m" or "km"
 	local formatted_distance = (distance < 1000) and distance or (distance / 1000.0)
@@ -321,14 +275,16 @@ end)
 
 script.register_looped("Random Events", function(script)
 	looped_update_re_info()
-	
+	if enable_notifications then
+		looped_notify_player()
+	end
 	if enable_esp and event_coords ~= vec3:new(0.0, 0.0, 0.0) then
-		looped_draw_esp()
+		looped_render_esp()
 	end
 end)
 
 random_events_tab:add_imgui(function()
-	if re_initialized == 1 then
+	if re_initialized then
 		if ImGui.BeginCombo("Select Event", re_data.names[selected_event + 1]) then
 			for i = 1, #re_data.names do
 				local state = globals.get_int(gsbd_re + 1 + (1 + ((i - 1) * 15)))
@@ -344,8 +300,8 @@ random_events_tab:add_imgui(function()
 				if ImGui.Selectable(re_data.names[i], i - 1 == selected_event) then
 					selected_event = i - 1
 					selected_loc = 0
-					set_cd = re_data.cooldowns.defaults[selected_event + 1]
-					set_ab = re_data.availabilities.defaults[selected_event + 1]
+					set_cd = re_data.cd_defaults[selected_event + 1]
+					set_ab = re_data.ab_defaults[selected_event + 1]
 				end
 
 				ImGui.PopStyleColor()
@@ -386,7 +342,7 @@ random_events_tab:add_imgui(function()
 		else
 			ImGui.Text("Active Events: " .. num_active_events .. "/" .. max_events)
 		end
-		help_marker("Shows the current number of active events out of the maximum allowed.")
+		help_marker("Shows the current number of active events (locally) out of the maximum allowed.")
 		
 		if SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat("freemode")) ~= 0 then
 			ImGui.Text("Session Time: " .. session_time)
@@ -462,16 +418,14 @@ random_events_tab:add_imgui(function()
 			set_cd = ImGui.InputInt("Cooldown##cd", set_cd)
 			
 			if ImGui.Button("Apply##apply_cd") then
-				tunables.set_int(re_data.cooldowns.tunables[selected_event + 1], set_cd)
+				locals.set_int("freemode", fmre_data + (1 + (selected_event * 12)) + 6, set_cd)
 			end
 			
 			set_ab = ImGui.InputInt("Availability##ab", set_ab)
 			
 			if ImGui.Button("Apply##apply_ab") then
-				tunables.set_int(re_data.availabilities.tunables[selected_event + 1], set_ab)
+				locals.set_int("freemode", fmre_data + (1 + (selected_event * 12)) + 7, set_ab)
 			end
-			
-			ImGui.Text("You have to set the values before the initialization process.")
 		end
 		
 		if ImGui.CollapsingHeader("Settings") then
@@ -520,8 +474,8 @@ random_events_tab:add_imgui(function()
 						tunables.set_int("NC_SOURCE_TRUCK_HEAD_COUNT", 1)
 						tunables.set_int("STANDARD_KEYBIND_SELECTION", -1)
 						tunables.set_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022", false)
-						tunables.set_int("ENABLE_HALLOWEEN_GHOSTHUNT", 0)
 						tunables.set_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL", false)
+						tunables.set_int("ENABLE_HALLOWEEN_GHOSTHUNT", 0)
 						tunables.set_bool(2093114948, false)
 					end
 				end
@@ -542,6 +496,8 @@ random_events_tab:add_imgui(function()
 				ImGui.EndDisabled()
 			end
 			help_marker("Allows you to set the target of Phantom Car and Gooch.")
+			
+			enable_notifications = ImGui.Checkbox("Notifications", enable_notifications)
 		end
 	else
 		ImGui.Text("Random Events aren't initialized yet.")

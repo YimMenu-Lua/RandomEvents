@@ -1,199 +1,237 @@
-re_tab = gui.get_tab("GUI_TAB_NETWORK"):add_tab("Random Events")
+local re_tab = gui.get_tab("GUI_TAB_NETWORK"):add_tab("Random Events")
 
-RE_DATA = {
-    REQUEST_RE_HASH = -126218586,
-    GSBD_RE 	    = 1882037,
-    GSBD            = 2648918,
-    GPBD_FM_2       = 1882422,
-    FMRE_DATA       = 15544,
-    RETURN_FALSE    = 504300, -- func_1034 - 0x7B1EC
-    RETURN_TRUE     = 29788,  -- func_144  - 0x745C
-    MAX_LOCATIONS   = { 29, 8, 9, 49, 7, 0, 25, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 8, 0 },
-    BLIP_RANGES     = { 200, nil, 200, nil, nil, nil, nil, 400, nil, nil, 200, 200, 200, 100, nil, nil, 200, nil, nil, nil },
-    INSTANCES = {
-        DRUG_VEHICLE 	  = 0,
-        MOVIE_PROPS 	  = 1,
-        GOLDEN_GUN 	  = 2,
-        VEHICLE_LIST 	  = 3,
-        SLASHER 	  = 4,
-        PHANTOM_CAR 	  = 5,
-        SIGHTSEEING 	  = 6,
-        SMUGGLER_TRAIL 	  = 7,
-        CERBERUS 	  = 8,
-        SMUGGLER_PLANE 	  = 9,
-        CRIME_SCENE 	  = 10,
-        METAL_DETECTOR 	  = 11,
-        CONVOY 		  = 12,
-        ROBBERY 	  = 13,
-        XMAS_MUGGER 	  = 14,
-        BANK_SHOOTOUT 	  = 15,
-        ARMOURED_TRUCK 	  = 16,
-        POSSESSED_ANIMALS = 17,
-        GHOSTHUNT 	  = 18,
-        XMAS_TRUCK        = 19
-    },
-    STATES = {
-        INACTIVE  = 0,
-        AVAILABLE = 1,
-        ACTIVE    = 2,
-        CLEANUP   = 3
-    },
-    NAMES = {
-        "Drug Vehicle",
-        "Movie Props",
-        "Sleeping Guard",
-        "Exotic Exports",
-        "Slashers",
-        "Phantom Car",
-        "Sightseeing",
-        "Smuggler Trail",
-        "Cerberus",
-        "Smuggler Plane",
-        "Crime Scene",
-        "Metal Detector",
-        "Finders Keepers",
-        "Store Robbery",
-        "Gooch",
-        "Weazel Bank Shootout",
-        "Armored Truck",
-        "Possessed Animals",
-        "Ghosts Exposed",
-        "Happy Holidays Hauler"
-    },
-    FUNC_HASHES = {
-        2767956, -- func_8742 - 0x2A3C54
-        2767720, -- func_8737 - 0x2A3B68
-        2767675, -- func_8735 - 0x2A3B3B
-        2767613, -- func_8733 - 0x2A3AFD
-        2764516, -- func_8726 - 0x2A2EE4
-        2763652, -- func_8718 - 0x2A2B84 -- Should be available check
-        2763420, -- func_8714 - 0x2A2A9C
-        2763350, -- func_8713 - 0x2A2A56
-        2762838, -- func_8707 - 0x2A2856
-        2762747, -- func_8704 - 0x2A27FB
-        2762669, -- func_8702 - 0x2A27AD
-        2762594, -- func_8700 - 0x2A2762
-        2762516, -- func_8698 - 0x2A2714
-        2762438, -- func_8696 - 0x2A26C6
-        2761589, -- func_8686 - 0x2A2375 -- Should be available check
-        2761461, -- func_8683 - 0x2A22F5
-        2761371, -- func_8680 - 0x2A229B
-        2760882, -- func_8671 - 0x2A20B2
-        2760044, -- func_8668 - 0x2A1D6C
-        2759990  -- func_8667 - 0x2A1D36 -- Should be available check
-    },
-    COOLDOWNS = {
-        tunables.get_int("SUM22_RE_DRUG_VEHICLE_INACTIVE_TIME"),
-        tunables.get_int("SUM22_RE_MOVIE_PROPS_INACTIVE_TIME"),
-        tunables.get_int("SUM22_RE_GOLDEN_GUN_INACTIVE_TIME"),
-        tunables.get_int("SUM22_RE_VEHICLE_LIST_INACTIVE_TIME"),
-        tunables.get_int("STANDARDCONTROLLERVOLUME_COOLDOWN"),
-        tunables.get_int("STANDARDTARGETTINGTIME_COOLDOWN"),
-        tunables.get_int("SSP2_COOLDOWN"),
-        tunables.get_int("SUM22_RE_SMUGGLER_TRAIL_INACTIVE_TIME"),
-        tunables.get_int("NC_SOURCE_TRUCK_COOLDOWN"),
-        tunables.get_int("SUM22_RE_SMUGGLER_PLANE_INACTIVE_TIME"),
-        tunables.get_int("SUM22_RE_CRIME_SCENE_INACTIVE_TIME"),
-        tunables.get_int("SUM22_RE_METAL_DETECTOR_INACTIVE_TIME"),
-        tunables.get_int("XM22_RE_GANG_CONVOY_INACTIVE_TIME"),
-        tunables.get_int("XM22_RE_ROBBERY_INACTIVE_TIME"),
-        tunables.get_int("STANDARD_KEYBIND_COOLDOWN"),
-        tunables.get_int("XM22_RE_BANK_SHOOTOUT_INACTIVE_TIME"),
-        globals.get_int(262145 + 34272), -- Armored Truck (doesn't have a tunable)
-        tunables.get_int("STANDARDCONTROLLERVOLUME_COOLDOWN"),
-        tunables.get_int("SUM23_RE_GHOSTHUNT_INACTIVE_TIME"),
-        tunables.get_int("XMAS_TRUCK_INACTIVE_TIME")
-    },
-    AVAILABILITIES = {
-        tunables.get_int("SUM22_RE_DRUG_VEHICLE_AVAILABLE_TIME"),
-        tunables.get_int("SUM22_RE_MOVIE_PROPS_AVAILABLE_TIME"),
-        tunables.get_int("SUM22_RE_GOLDEN_GUN_AVAILABLE_TIME"),
-        tunables.get_int("SUM22_RE_VEHICLE_LIST_AVAILABLE_TIME"),
-        tunables.get_int("STANDARDCONTROLLERVOLUME_AVAILABILITY"),
-        tunables.get_int("STANDARDTARGETTINGTIME_AVAILABILITY"),
-        tunables.get_int("SSP2_AVAILABILITY"),
-        tunables.get_int("SUM22_RE_SMUGGLER_TRAIL_AVAILABLE_TIME"),
-        tunables.get_int("NC_SOURCE_TRUCK_AVAILABILITY"),
-        tunables.get_int("SUM22_RE_SMUGGLER_PLANE_AVAILABLE_TIME"),
-        tunables.get_int("SUM22_RE_CRIME_SCENE_AVAILABLE_TIME"),
-        tunables.get_int("SUM22_RE_METAL_DETECTOR_AVAILABLE_TIME"),
-        tunables.get_int("XM22_RE_GANG_CONVOY_AVAILABLE_TIME"),
-        tunables.get_int("XM22_RE_ROBBERY_AVAILABLE_TIME"),
-        tunables.get_int("STANDARD_KEYBIND_AVAILABILITY"),
-        tunables.get_int("XM22_RE_BANK_SHOOTOUT_AVAILABLE_TIME"),
-        globals.get_int(262145 + 34273), -- Armored Truck (doesn't have a tunable)
-        tunables.get_int("STANDARDCONTROLLERVOLUME_AVAILABILITY"),
-        tunables.get_int("SUM23_RE_GHOSTHUNT_AVAILABLE_TIME"),
-        tunables.get_int("XMAS_TRUCK_AVAILABLE_TIME")
-    }
+local RE = {
+	REQUEST_RE_HASH = -126218586,
+	GSBD_RE		= 1882037,
+	GPBD_FM_2	= 1882422,
+	FMRE_DATA	= 15544,
+	RETURN_FALSE	= 504300, -- func_1034 - 0x7B1EC
+	RETURN_TRUE	= 29788,  -- func_144  - 0x745C
+        VECTOR_ZERO     = vec3:new(0.0, 0.0, 0.0),
+	MAX_LOCATIONS	= { 29, 8, 9, 49, 7, 0, 25, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 8, 0 },
+	BLIP_RANGES	= { 200.0, nil, 200.0, nil, nil, nil, nil, 400.0, nil, nil, 200.0, 200.0, 200.0, 100.0, nil, nil, 200.0, nil, nil, nil },
+	INSTANCES = {
+		DRUG_VEHICLE	  = 0,
+		MOVIE_PROPS	  = 1,
+		GOLDEN_GUN	  = 2,
+		VEHICLE_LIST	  = 3,
+		SLASHER	          = 4,
+		PHANTOM_CAR	  = 5,
+		SIGHTSEEING	  = 6,
+		SMUGGLER_TRAIL	  = 7,
+		CERBERUS	  = 8,
+		SMUGGLER_PLANE	  = 9,
+		CRIME_SCENE	  = 10,
+		METAL_DETECTOR    = 11,
+		CONVOY		  = 12,
+		ROBBERY		  = 13,
+		XMAS_MUGGER	  = 14,
+		BANK_SHOOTOUT	  = 15,
+		ARMOURED_TRUCK	  = 16,
+		POSSESSED_ANIMALS = 17,
+		GHOSTHUNT	  = 18,
+		XMAS_TRUCK	  = 19
+	},
+	STATES = {
+		INACTIVE  = 0,
+		AVAILABLE = 1,
+		ACTIVE    = 2,
+		CLEANUP   = 3
+	},
+	NAMES = {
+	        "Drug Vehicle",
+	        "Movie Props",
+	        "Sleeping Guard",
+	        "Exotic Exports",
+	        "Slashers",
+	        "Phantom Car",
+	        "Sightseeing",
+	        "Smuggler Trail",
+	        "Cerberus",
+	        "Smuggler Plane",
+	        "Crime Scene",
+	        "Metal Detector",
+	        "Finders Keepers",
+	        "Store Robbery",
+	        "Gooch",
+	        "Weazel Bank Shootout",
+	        "Armored Truck",
+	        "Possessed Animals",
+	        "Ghosts Exposed",
+	        "Happy Holidays Hauler"	
+	},
+    	SCRIPTS = {
+	        "fm_content_drug_vehicle",
+	        "fm_content_movie_props",
+	        "fm_content_golden_gun",
+	        "fm_content_vehicle_list",
+	        "fm_content_slasher",
+	        "fm_content_phantom_car",
+	        "fm_content_sightseeing",
+	        "fm_content_smuggler_trail",
+	        "fm_content_cerberus",
+	        "fm_content_smuggler_plane",
+	        "fm_content_crime_scene",
+	        "fm_content_metal_detector",
+	        "fm_content_convoy",
+	        "fm_content_robbery",
+	        "fm_content_xmas_mugger",
+	        "fm_content_bank_shootout",
+	        "fm_content_armoured_truck",
+	        "fm_content_possessed_animals",
+	        "fm_content_ghosthunt",
+	        "fm_content_xmas_truck"
+    	},
+	FUNC_HASHES = {
+	        2767956, -- func_8742 - 0x2A3C54
+	        2767720, -- func_8737 - 0x2A3B68
+	        2767675, -- func_8735 - 0x2A3B3B
+	        2767613, -- func_8733 - 0x2A3AFD
+	        2764516, -- func_8726 - 0x2A2EE4
+	        2763652, -- func_8718 - 0x2A2B84 -- Should be available check
+	        2763420, -- func_8714 - 0x2A2A9C
+	        2763350, -- func_8713 - 0x2A2A56
+	        2762838, -- func_8707 - 0x2A2856
+	        2762747, -- func_8704 - 0x2A27FB
+	        2762669, -- func_8702 - 0x2A27AD
+	        2762594, -- func_8700 - 0x2A2762
+	        2762516, -- func_8698 - 0x2A2714
+	        2762438, -- func_8696 - 0x2A26C6
+	        2761589, -- func_8686 - 0x2A2375 -- Should be available check
+	        2761461, -- func_8683 - 0x2A22F5
+	        2761371, -- func_8680 - 0x2A229B
+	        2760882, -- func_8671 - 0x2A20B2
+	        2760044, -- func_8668 - 0x2A1D6C
+	        2759990  -- func_8667 - 0x2A1D36 -- Should be available check	
+	},
+	COOLDOWNS = {
+	        "SUM22_RE_DRUG_VEHICLE_INACTIVE_TIME",
+	        "SUM22_RE_MOVIE_PROPS_INACTIVE_TIME",
+	        "SUM22_RE_GOLDEN_GUN_INACTIVE_TIME",
+	        "SUM22_RE_VEHICLE_LIST_INACTIVE_TIME",
+	        "STANDARDCONTROLLERVOLUME_COOLDOWN",
+	        "STANDARDTARGETTINGTIME_COOLDOWN",
+	        "SSP2_COOLDOWN",
+	        "SUM22_RE_SMUGGLER_TRAIL_INACTIVE_TIME",
+	        "NC_SOURCE_TRUCK_COOLDOWN",
+	        "SUM22_RE_SMUGGLER_PLANE_INACTIVE_TIME",
+	        "SUM22_RE_CRIME_SCENE_INACTIVE_TIME",
+	        "SUM22_RE_METAL_DETECTOR_INACTIVE_TIME",
+	        "XM22_RE_GANG_CONVOY_INACTIVE_TIME",
+	        "XM22_RE_ROBBERY_INACTIVE_TIME",
+	        "STANDARD_KEYBIND_COOLDOWN",
+	        "XM22_RE_BANK_SHOOTOUT_INACTIVE_TIME",
+	        296417, -- Armored Truck (doesn't have a tunable)
+	        "STANDARDCONTROLLERVOLUME_COOLDOWN",
+	        "SUM23_RE_GHOSTHUNT_INACTIVE_TIME",
+	        "XMAS_TRUCK_INACTIVE_TIME"	
+	},
+	AVAILABILITIES = {
+	        "SUM22_RE_DRUG_VEHICLE_AVAILABLE_TIME",
+	        "SUM22_RE_MOVIE_PROPS_AVAILABLE_TIME",
+	        "SUM22_RE_GOLDEN_GUN_AVAILABLE_TIME",
+	        "SUM22_RE_VEHICLE_LIST_AVAILABLE_TIME",
+	        "STANDARDCONTROLLERVOLUME_AVAILABILITY",
+	        "STANDARDTARGETTINGTIME_AVAILABILITY",
+	        "SSP2_AVAILABILITY",
+	        "SUM22_RE_SMUGGLER_TRAIL_AVAILABLE_TIME",
+	        "NC_SOURCE_TRUCK_AVAILABILITY",
+	        "SUM22_RE_SMUGGLER_PLANE_AVAILABLE_TIME",
+	        "SUM22_RE_CRIME_SCENE_AVAILABLE_TIME",
+	        "SUM22_RE_METAL_DETECTOR_AVAILABLE_TIME",
+	        "XM22_RE_GANG_CONVOY_AVAILABLE_TIME",
+	        "XM22_RE_ROBBERY_AVAILABLE_TIME",
+	        "STANDARD_KEYBIND_AVAILABILITY",
+	        "XM22_RE_BANK_SHOOTOUT_AVAILABLE_TIME",
+	        296418, -- Armored Truck (doesn't have a tunable)
+	        "STANDARDCONTROLLERVOLUME_AVAILABILITY",
+	        "SUM23_RE_GHOSTHUNT_AVAILABLE_TIME",
+	        "XMAS_TRUCK_AVAILABLE_TIME"	
+	}
 }
 
-local selected_event 	   = 0
-local selected_target 	   = 0
-local selected_loc 	   = 0
-local set_cd 		   = RE_DATA.COOLDOWNS[selected_event + 1]
-local set_ab 		   = RE_DATA.AVAILABILITIES[selected_event + 1]
-local enable_line 	   = true
-local enable_spheres 	   = true
+local selected_event       = 0
+local selected_target      = 0
+local selected_loc         = 0
+local set_cooldown         = 0
+local set_availability     = 0
+local enable_line          = true
+local enable_spheres       = true
 local enable_notifications = true
-local apply_in_min 	   = false
-local enable_esp 	   = false
+local apply_in_minutes     = false
+local enable_esp           = false
 local disable_all_events   = false
 local bypass_requirements  = false
+local remove_coord_delay   = false
 local set_target_player    = false
 local notified_available   = {}
 local notified_active      = {}
 
-local event_coords       = vec3:new(0.0, 0.0, 0.0)
-local trigger_range      = 0.0
-local event_state        = RE_DATA.STATES.INACTIVE
-local event_loc          = 0
-local max_num_re         = 0
-local max_events         = 0
-local num_active_events  = 0
-local target_player_id 	 = 0
-local event_cooldown     = 0
-local event_availability = 0
-local re_initialized 	 = false
-local session_time 	 = ""
-local num_entities 	 = {}
-local max_entities 	 = {}
-local target_players 	 = {}
+local event_coords           = vec3:new(0.0, 0.0, 0.0)
+local event_trigger_range    = 0.0
+local event_blip_range       = 0.0
+local event_state            = RE.STATES.INACTIVE
+local event_timer            = 0
+local event_bitset           = 0
+local event_variant          = 0
+local event_cooldown         = 0
+local event_availability     = 0
+local max_num_re             = 0
+local max_events             = 0
+local num_active_events      = 0
+local target_player_id       = 0
+local re_initialized         = false
+local cooldown_time_left     = ""
+local availability_time_left = ""
+local max_entities           = {}
+local num_entities           = {}
+local target_players         = {}
 
 function REQUEST_RANDOM_EVENT(event, variant)
-    local fmmc_type = locals.get_int("freemode", RE_DATA.FMRE_DATA + 241 + 1 + (event + 1))
-    local args 	    = {RE_DATA.REQUEST_RE_HASH, 0, -1, fmmc_type, 0, variant, 0}
+    local fmmc_type = locals.get_int("freemode", RE.FMRE_DATA + 241 + 1 + (event + 1))
+    local args      = { RE.REQUEST_RE_HASH, 0, -1, fmmc_type, 0, variant, 0 }
     network.trigger_script_event(-1, args)
 end
 
 function HOOK_SHOULD_TRIGGER_FUNCTIONS(value)
     for i = 0, max_num_re - 1 do
-        if i == RE_DATA.INSTANCES.PHANTOM_CAR or i == RE_DATA.INSTANCES.XMAS_MUGGER or i == RE_DATA.INSTANCES.XMAS_TRUCK then
-            locals.set_int("freemode", RE_DATA.FMRE_DATA + (1 + (i * 12)) + 5, value)
+        if i == RE.INSTANCES.PHANTOM_CAR or i == RE.INSTANCES.XMAS_MUGGER or i == RE.INSTANCES.XMAS_TRUCK then
+            locals.set_int("freemode", RE.FMRE_DATA + (1 + (i * 12)) + 5, value)
         else
-            locals.set_int("freemode", RE_DATA.FMRE_DATA + (1 + (i * 12)) + 1 + 1, value)
+            locals.set_int("freemode", RE.FMRE_DATA + (1 + (i * 12)) + 1 + 1, value)
         end
     end
 end
 
 function RESTORE_SHOULD_TRIGGER_FUNCTIONS()
     for i = 0, max_num_re - 1 do
-        if i == RE_DATA.INSTANCES.PHANTOM_CAR or i == RE_DATA.INSTANCES.XMAS_MUGGER or i == RE_DATA.INSTANCES.XMAS_TRUCK then
-            locals.set_int("freemode", RE_DATA.FMRE_DATA + (1 + (i * 12)) + 5, RE_DATA.FUNC_HASHES[i + 1])
+        if i == RE.INSTANCES.PHANTOM_CAR or i == RE.INSTANCES.XMAS_MUGGER or i == RE.INSTANCES.XMAS_TRUCK then
+            locals.set_int("freemode", RE.FMRE_DATA + (1 + (i * 12)) + 5, RE.FUNC_HASHES[i + 1])
         else
-            locals.set_int("freemode", RE_DATA.FMRE_DATA + (1 + (i * 12)) + 1 + 1, RE_DATA.FUNC_HASHES[i + 1])
+            locals.set_int("freemode", RE.FMRE_DATA + (1 + (i * 12)) + 1 + 1, RE.FUNC_HASHES[i + 1])
         end
     end
 end
 
+function SET_EVENT_COOLDOWN(event, value)
+    locals.set_int("freemode", RE.FMRE_DATA + (1 + (event * 12)) + 6, value)
+end
+
+function SET_EVENT_AVAILABILITY(event, value)
+    locals.set_int("freemode", RE.FMRE_DATA + (1 + (event * 12)) + 7, value)
+end
+
 function IS_EVENT_EXCEPTION()
-    return selected_event == RE_DATA.INSTANCES.PHANTOM_CAR or selected_event == RE_DATA.INSTANCES.SIGHTSEEING or selected_event == RE_DATA.INSTANCES.XMAS_MUGGER or selected_event == RE_DATA.INSTANCES.GHOSTHUNT
+    return selected_event == RE.INSTANCES.PHANTOM_CAR or selected_event == RE.INSTANCES.SIGHTSEEING or selected_event == RE.INSTANCES.XMAS_MUGGER or selected_event == RE.INSTANCES.GHOSTHUNT
 end
 
 function GET_NUM_LOCALLY_ACTIVE_EVENTS()
     local num_events = 0
+
     for i = 0, max_num_re - 1 do
-        if globals.get_int(RE_DATA.GPBD_FM_2 + (1 + (self.get_id() * 142)) + 78 + 1 + (1 + (i * 3))) ~= 0 then
+        local local_state = globals.get_int(RE.GPBD_FM_2 + (1 + (self.get_id() * 142)) + 78 + 1 + (1 + (i * 3)))
+
+        if local_state ~= 0 then
             num_events = num_events + 1
         end
     end
@@ -203,7 +241,9 @@ end
 
 function GET_TRIGGERER_INDEX(event)
     for i = 0, 31 do
-        if globals.get_int(RE_DATA.GPBD_FM_2 + (1 + (i * 142)) + 78 + 1 + (1 + (event * 3))) == RE_DATA.STATES.ACTIVE then
+        local player_state = globals.get_int(RE.GPBD_FM_2 + (1 + (i * 142)) + 78 + 1 + (1 + (event * 3)))
+
+        if player_state == RE.STATES.ACTIVE then
             return i
         end
     end
@@ -213,8 +253,10 @@ end
 
 function GET_TARGET_PLAYERS()
     local player_table = {}
+
     for i = 0, 31 do
         local player_name = PLAYER.GET_PLAYER_NAME(i)
+
         if player_name ~= "**Invalid**" then
             table.insert(player_table, {id = i, name = player_name})
         end
@@ -223,17 +265,16 @@ function GET_TARGET_PLAYERS()
     return player_table
 end
 
-function GET_SESSION_TIME()
-    local diff = tonumber(NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_CLOUD_TIME_AS_INT(), globals.get_int(RE_DATA.GSBD + 1)))
-    if diff <= 0 then
-        return "00:00:00"
-    else
-        local hours = string.format("%02.f", math.floor(diff % (3600 * 24) / 3600))
-        local mins  = string.format("%02.f", math.floor(diff % 3600 / 60))
-        local secs  = string.format("%02.f", math.floor(diff % 60))
-
-        return hours .. ":" .. mins .. ":" .. secs
-    end
+function GET_EVENT_TIME_LEFT(event_time)
+    local time_passed   = MISC.ABSI(NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_NETWORK_TIME(), event_timer))
+    local diff 	        = event_time - time_passed
+    local total_seconds = math.floor(diff / 1000)
+    local hours         = math.floor(total_seconds / 3600)
+    local minutes       = math.floor((total_seconds % 3600) / 60)
+    local seconds       = total_seconds % 60
+    local formatted     = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+    
+    return formatted
 end
 
 function CLAMP(value, min, max)
@@ -252,60 +293,39 @@ function HELP_MARKER(text)
     end
 end
 
-function LOOPED_UPDATE_RE_INFO()
-    event_coords       = globals.get_vec3(RE_DATA.GSBD_RE + 1 + (1 + (selected_event * 15)) + 10) -- It gets updated every 5 seconds
-    trigger_range      = globals.get_float(RE_DATA.GSBD_RE + 1 + (1 + (selected_event * 15)) + 13)
-    event_state        = globals.get_int(RE_DATA.GSBD_RE + 1 + (1 + (selected_event * 15)))
-    event_loc          = globals.get_int(RE_DATA.GSBD_RE + 1 + (1 + (selected_event * 15)) + 6)
-    num_entities[1]    = globals.get_int(RE_DATA.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7)
-    num_entities[2]    = globals.get_int(RE_DATA.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7 + 1)
-    num_entities[3]    = globals.get_int(RE_DATA.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7 + 2)
-    re_initialized     = globals.get_int(RE_DATA.GPBD_FM_2 + (1 + (self.get_id() * 142)) + 78) == 1
-    max_num_re         = locals.get_int("freemode", RE_DATA.FMRE_DATA + 241)
-    event_cooldown     = locals.get_int("freemode", RE_DATA.FMRE_DATA + (1 + (selected_event * 12)) + 6)
-    event_availability = locals.get_int("freemode", RE_DATA.FMRE_DATA + (1 + (selected_event * 12)) + 7)
-    max_events 	       = tunables.get_int("FMREMAXACTIVATEDEVENTS")
-    max_entities[1]    = tunables.get_int("FMREMAXRESERVEDPEDS")
-    max_entities[2]    = tunables.get_int("FMREMAXRESERVEDVEHICLES")
-    max_entities[3]    = tunables.get_int("FMREMAXRESERVEDOBJECTS")
-    target_players     = GET_TARGET_PLAYERS()
-    num_active_events  = GET_NUM_LOCALLY_ACTIVE_EVENTS()
-    session_time       = GET_SESSION_TIME()
+local function LOOPED_UPDATE_RE_INFO()
+    event_coords           = globals.get_vec3(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 10) -- It gets updated every 5 seconds
+    event_trigger_range    = globals.get_float(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 13)
+    event_state            = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)))
+    event_timer            = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 1)
+    event_bitset           = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 3) -- TO-DO: Use the bitset to force launch the event instead of firing the script event
+    event_variant          = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 6)
+    num_entities[1]        = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7)
+    num_entities[2]        = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7 + 1)
+    num_entities[3]        = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7 + 2)
+    re_initialized         = globals.get_int(RE.GPBD_FM_2 + (1 + (self.get_id() * 142)) + 78) == 1
+    max_num_re             = locals.get_int("freemode", RE.FMRE_DATA + 241)
+    event_cooldown         = locals.get_int("freemode", RE.FMRE_DATA + (1 + (selected_event * 12)) + 6)
+    event_availability     = locals.get_int("freemode", RE.FMRE_DATA + (1 + (selected_event * 12)) + 7)
+    max_events             = tunables.get_int("FMREMAXACTIVATEDEVENTS")
+    max_entities[1]        = tunables.get_int("FMREMAXRESERVEDPEDS")
+    max_entities[2]        = tunables.get_int("FMREMAXRESERVEDVEHICLES")
+    max_entities[3]        = tunables.get_int("FMREMAXRESERVEDOBJECTS")
+    num_active_events      = GET_NUM_LOCALLY_ACTIVE_EVENTS()
+    cooldown_time_left     = GET_EVENT_TIME_LEFT(event_cooldown)
+    availability_time_left = GET_EVENT_TIME_LEFT(event_availability)
+    target_players         = GET_TARGET_PLAYERS()
+    event_blip_range       = RE.BLIP_RANGES[selected_event + 1]
 
     if disable_all_events then
-        HOOK_SHOULD_TRIGGER_FUNCTIONS(RE_DATA.RETURN_FALSE)
+        HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_FALSE)
     end
     if bypass_requirements then
-        HOOK_SHOULD_TRIGGER_FUNCTIONS(RE_DATA.RETURN_TRUE)
+        HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_TRUE)
     end
     if set_target_player then
-        globals.set_int(RE_DATA.GSBD_RE + 304, target_player_id) -- Phantom Car Target (Also the Slasher target, but it doesn't work)
-        globals.set_int(RE_DATA.GSBD_RE + 304 + 1, target_player_id) -- Gooch Target
-    end
-end
-
-function LOOPED_NOTIFY_PLAYER()
-    for i = 0, max_num_re - 1 do
-        local state = globals.get_int(RE_DATA.GSBD_RE + 1 + (1 + (i * 15)))		
-        if state == RE_DATA.STATES.ACTIVE then
-            if not notified_active[i] then
-                local triggerer_index = GET_TRIGGERER_INDEX(i)
-                if triggerer_index ~= -1 then
-                    gui.show_message("Random Events", "" .. RE_DATA.NAMES[i + 1] .. " is triggered by " .. PLAYER.GET_PLAYER_NAME(triggerer_index) .. ".")
-                    notified_active[i] = true
-                end
-            end
-		end
-		if state == RE_DATA.STATES.AVAILABLE then
-            if not notified_available[i] then
-                gui.show_message("Random Events", "" .. RE_DATA.NAMES[i + 1] .. " is available.")
-                notified_available[i] = true
-            end
-		end
-        if state == RE_DATA.STATES.INACTIVE and notified_available[i] and notified_active[i] then
-            notified_available[i] = false
-	    notified_active[i] 	  = false
-        end
+        globals.set_int(RE.GSBD_RE + 304, target_player_id) -- Phantom Car Target (Also the Slasher target, but it doesn't work)
+        globals.set_int(RE.GSBD_RE + 304 + 1, target_player_id) -- Gooch Target
     end
 end
 
@@ -319,9 +339,11 @@ function LOOPED_RENDER_ESP()
     _, screen_coords_x, screen_coords_y = GRAPHICS.GET_SCREEN_COORD_FROM_WORLD_COORD(event_coords.x, event_coords.y, event_coords.z, screen_coords_x, screen_coords_y)
     if enable_line then
         GRAPHICS.DRAW_LINE(self.get_pos().x, self.get_pos().y, self.get_pos().z, event_coords.x, event_coords.y, event_coords.z, 93, 182, 229, 255)
+		GRAPHICS.REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", false)
+		GRAPHICS.DRAW_SPRITE("CommonMenu", "Common_Medal", screen_coords_x, screen_coords_y, 0.03, 0.06, 0.0, 93, 182, 229, 255, false, 0)
     end
     HUD.BEGIN_TEXT_COMMAND_DISPLAY_TEXT("STRING")
-    HUD.ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(string.format("%s (%.2f%s)", (event_state == RE_DATA.STATES.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. RE_DATA.NAMES[selected_event + 1] .. "~s~", formatted_distance, km_or_m))
+    HUD.ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(string.format("%s (%.2f%s)", (event_state == RE.STATES.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. RE.NAMES[selected_event + 1] .. "~s~", formatted_distance, km_or_m))
     HUD.SET_TEXT_RENDER_ID(1)
     HUD.SET_TEXT_OUTLINE()
     HUD.SET_TEXT_CENTRE(true)
@@ -331,9 +353,92 @@ function LOOPED_RENDER_ESP()
     HUD.SET_TEXT_COLOUR(255, 255, 255, 240)
     HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_coords_x, screen_coords_y + -0.03, 0)
     if enable_spheres then
-        GRAPHICS.DRAW_MARKER(28, event_coords.x, event_coords.y, event_coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, 0, 153, 51, 40, true, true, 2, false, nil, nil, false)
-        if RE_DATA.BLIP_RANGES[selected_event + 1] ~= nil then
-            GRAPHICS.DRAW_MARKER(28, event_coords.x, event_coords.y, event_coords.z, 0, 0, 0, 0, 180, 0, RE_DATA.BLIP_RANGES[selected_event + 1], RE_DATA.BLIP_RANGES[selected_event + 1], RE_DATA.BLIP_RANGES[selected_event + 1], 93, 182, 229, 40, true, true, 2, false, nil, nil, false)
+        GRAPHICS.DRAW_MARKER(28, event_coords.x, event_coords.y, event_coords.z, 0, 0, 0, 0, 180, 0, event_trigger_range, event_trigger_range, event_trigger_range, 0, 153, 51, 40, true, true, 2, false, nil, nil, false)
+        if event_blip_range ~= nil then
+            GRAPHICS.DRAW_MARKER(28, event_coords.x, event_coords.y, event_coords.z, 0, 0, 0, 0, 180, 0, event_blip_range, event_blip_range, event_blip_range, 93, 182, 229, 40, true, true, 2, false, nil, nil, false)
+        end
+    end
+end
+
+-- TO-DO: simplify this function 
+function LOOPED_REMOVE_COORD_DELAY()
+    --[[
+    Update Instructions:
+    1 - Find RE update trigger script event hash in freemode (1568389507 for 1.68)
+    2 - Search for its setter in the event's script
+    3 - Look for the function that calls the setter, the first param of has_net_timer_expired is the local
+    ]]--
+
+    -- Preventing the game from updating the timer
+    locals.set_int(RE.SCRIPTS[1], 1733 + 145 + 1, 1)
+    locals.set_int(RE.SCRIPTS[2], 1859 + 167 + 1, 1)
+    locals.set_int(RE.SCRIPTS[3], 1730 + 127 + 1, 1)
+    locals.set_int(RE.SCRIPTS[4], 1539 + 113 + 1, 1)
+    locals.set_int(RE.SCRIPTS[5], 1568 + 113 + 1, 1)
+    locals.set_int(RE.SCRIPTS[6], 1548 + 113 + 1, 1)
+    locals.set_int(RE.SCRIPTS[7], 1790 + 114 + 1, 1)
+    locals.set_int(RE.SCRIPTS[8], 2170 + 248 + 1, 1)
+    locals.set_int(RE.SCRIPTS[9], 1560 + 121 + 1, 1)
+    locals.set_int(RE.SCRIPTS[10], 1807 + 208 + 1, 1)
+    locals.set_int(RE.SCRIPTS[11], 1916 + 185 + 1, 1)
+    locals.set_int(RE.SCRIPTS[12], 1778 + 128 + 1, 1)
+    locals.set_int(RE.SCRIPTS[13], 2704 + 469 + 1, 1)
+    locals.set_int(RE.SCRIPTS[14], 1694 + 123 + 1, 1)
+    locals.set_int(RE.SCRIPTS[15], 1591 + 113 + 1, 1)
+    locals.set_int(RE.SCRIPTS[16], 2175 + 255 + 1, 1)
+    locals.set_int(RE.SCRIPTS[17], 1868 + 147 + 1, 1)
+    locals.set_int(RE.SCRIPTS[18], 1564 + 113 + 1, 1)
+    locals.set_int(RE.SCRIPTS[19], 1522 + 118 + 1, 1)
+    locals.set_int(RE.SCRIPTS[20], 1432 + 121 + 1, 1)
+
+    -- Resetting the timer
+    locals.set_int(RE.SCRIPTS[1], 1733 + 145, 0)
+    locals.set_int(RE.SCRIPTS[2], 1859 + 167, 0)
+    locals.set_int(RE.SCRIPTS[3], 1730 + 127, 0)
+    locals.set_int(RE.SCRIPTS[4], 1539 + 113, 0)
+    locals.set_int(RE.SCRIPTS[5], 1568 + 113, 0)
+    locals.set_int(RE.SCRIPTS[6], 1548 + 113, 0)
+    locals.set_int(RE.SCRIPTS[7], 1790 + 114, 0)
+    locals.set_int(RE.SCRIPTS[8], 2170 + 248, 0)
+    locals.set_int(RE.SCRIPTS[9], 1560 + 121, 0)
+    locals.set_int(RE.SCRIPTS[10], 1807 + 208, 0)
+    locals.set_int(RE.SCRIPTS[11], 1916 + 185, 0)
+    locals.set_int(RE.SCRIPTS[12], 1778 + 128, 0)
+    locals.set_int(RE.SCRIPTS[13], 2704 + 469, 0)
+    locals.set_int(RE.SCRIPTS[14], 1694 + 123, 0)
+    locals.set_int(RE.SCRIPTS[15], 1591 + 113, 0)
+    locals.set_int(RE.SCRIPTS[16], 2175 + 255, 0)
+    locals.set_int(RE.SCRIPTS[17], 1868 + 147, 0)
+    locals.set_int(RE.SCRIPTS[18], 1564 + 113, 0)
+    locals.set_int(RE.SCRIPTS[19], 1522 + 118, 0)
+    locals.set_int(RE.SCRIPTS[20], 1432 + 121, 0)
+end
+
+function LOOPED_NOTIFY_PLAYER()
+    for i = 0, max_num_re - 1 do
+        local state = globals.get_int(RE.GSBD_RE + 1 + (1 + (i * 15)))
+
+        if state == RE.STATES.ACTIVE then
+            if not notified_active[i] then
+                local triggerer_index = GET_TRIGGERER_INDEX(i)
+
+                if triggerer_index ~= -1 then
+                    gui.show_message("Random Events", "" .. RE.NAMES[i + 1] .. " is triggered by " .. PLAYER.GET_PLAYER_NAME(triggerer_index) .. ".")
+                    notified_active[i] = true
+                end
+            end
+	end
+
+	if state == RE.STATES.AVAILABLE then
+            if not notified_available[i] then
+                gui.show_message("Random Events", "" .. RE.NAMES[i + 1] .. " is available.")
+                notified_available[i] = true
+            end
+	end
+
+        if state == RE.STATES.INACTIVE then
+            notified_available[i] = false
+	    notified_active[i] 	  = false
         end
     end
 end
@@ -343,54 +448,73 @@ event.register_handler(menu_event.PlayerMgrInit, function()
     target_player_id = 0
 end)
 
-script.register_looped("Random Events", function(script)
+script.register_looped("Random Events", function()
     LOOPED_UPDATE_RE_INFO()
+
     if re_initialized then
+        if enable_esp and event_coords ~= RE.VECTOR_ZERO then
+            LOOPED_RENDER_ESP()
+        end
+
+        if remove_coord_delay and event_state == RE.STATES.ACTIVE then
+            LOOPED_REMOVE_COORD_DELAY()
+        end
+
         if enable_notifications then
             LOOPED_NOTIFY_PLAYER()
-        end
-        if enable_esp and event_coords ~= vec3:new(0.0, 0.0, 0.0) then
-            LOOPED_RENDER_ESP()
         end
     end
 end)
 
 re_tab:add_imgui(function()
     if re_initialized then
-        if ImGui.BeginCombo("Select Event", RE_DATA.NAMES[selected_event + 1]) then
-            for i = 1, #RE_DATA.NAMES do
+        if ImGui.BeginCombo("Select Event", RE.NAMES[selected_event + 1]) then
+            for i = 1, #RE.NAMES do
                 local is_selected = (i - 1 == selected_event)
-                local state = globals.get_int(RE_DATA.GSBD_RE + 1 + (1 + ((i - 1) * 15)))
-                if state == RE_DATA.STATES.INACTIVE then
+                local state = globals.get_int(RE.GSBD_RE + 1 + (1 + ((i - 1) * 15)))
+
+                if state == RE.STATES.INACTIVE then
                     ImGui.PushStyleColor(ImGuiCol.Text, 1, 0, 0, 1)
-                elseif state == RE_DATA.STATES.AVAILABLE then
-                    ImGui.PopStyleColor()
-                elseif state == RE_DATA.STATES.ACTIVE then
+                elseif state == RE.STATES.AVAILABLE then
+                    ImGui.PushStyleColor(ImGuiCol.Text, 1, 1, 1, 1)
+                elseif state == RE.STATES.ACTIVE then
                     ImGui.PushStyleColor(ImGuiCol.Text, 0, 1, 0, 1)
                 end
-                if ImGui.Selectable(RE_DATA.NAMES[i], is_selected) then
+
+                if ImGui.Selectable(RE.NAMES[i], is_selected) then
                     selected_event = i - 1
                     selected_loc   = 0
-                    set_cd 	   = RE_DATA.COOLDOWNS[selected_event + 1]
-                    set_ab 	   = RE_DATA.AVAILABILITIES[selected_event + 1]
+                    if selected_event == RE.INSTANCES.ARMOURED_TRUCK then
+                        set_cooldown     = globals.get_int(RE.COOLDOWNS[selected_event + 1])
+                        set_availability = globals.get_int(RE.AVAILABILITIES[selected_event + 1])
+                    else
+                        set_cooldown     = tunables.get_int(RE.COOLDOWNS[selected_event + 1])
+                        set_availability = tunables.get_int(RE.AVAILABILITIES[selected_event + 1])
+                    end
                 end
+
                 if is_selected then
                     ImGui.SetItemDefaultFocus()
                 end
+
                 ImGui.PopStyleColor()
             end
+
             ImGui.EndCombo()
         end
 
         if set_target_player then
             selected_target = CLAMP(selected_target, 0, #target_players - 1)
+
             if ImGui.BeginCombo("Select Target", target_players[selected_target + 1].name) then
                 for i, player in ipairs(target_players) do
                     local is_selected = (i - 1 == selected_target)
+
                     if ImGui.Selectable(player.name .. " (ID: " .. player.id ..")", is_selected) then
                         selected_target  = i - 1
                         target_player_id = player.id
                     end
+
                     if is_selected then
                         ImGui.SetItemDefaultFocus()
                     end
@@ -399,15 +523,15 @@ re_tab:add_imgui(function()
             end
         end
 
-        if not IS_EVENT_EXCEPTION() and selected_event ~= RE_DATA.INSTANCES.VEHICLE_LIST and selected_event ~= RE_DATA.INSTANCES.BANK_SHOOTOUT and selected_event ~= RE_DATA.INSTANCES.XMAS_TRUCK then
-            selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. RE_DATA.MAX_LOCATIONS[selected_event + 1] .. ")", selected_loc)
+        if not IS_EVENT_EXCEPTION() and selected_event ~= RE.INSTANCES.VEHICLE_LIST and selected_event ~= RE.INSTANCES.BANK_SHOOTOUT and selected_event ~= RE.INSTANCES.XMAS_TRUCK then
+            selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. RE.MAX_LOCATIONS[selected_event + 1] .. ")", selected_loc)
 
             if on_modified then
-                selected_loc = CLAMP(selected_loc, 0, RE_DATA.MAX_LOCATIONS[selected_event + 1])
+                selected_loc = CLAMP(selected_loc, 0, RE.MAX_LOCATIONS[selected_event + 1])
             end
         else
             ImGui.BeginDisabled()
-            ImGui.InputInt("Select Location (0-" .. RE_DATA.MAX_LOCATIONS[selected_event + 1] .. ")", selected_loc)
+            ImGui.InputInt("Select Location (0-" .. RE.MAX_LOCATIONS[selected_event + 1] .. ")", selected_loc)
             ImGui.EndDisabled()
         end
 
@@ -418,65 +542,62 @@ re_tab:add_imgui(function()
         end
         HELP_MARKER("Shows the current number of active events (locally) out of the maximum allowed.")
 
-        ImGui.Text("Session Time: " .. session_time)
-        HELP_MARKER("Shows the amount of time passed since the current session is created.")
-
         if ImGui.Button("Launch Event") then
             script.run_in_fiber(function(script)
-                if event_state ~= RE_DATA.STATES.ACTIVE then
+                if event_state ~= RE.STATES.ACTIVE then
                     REQUEST_RANDOM_EVENT(selected_event, selected_loc)
-                    script:sleep(1000)
-                    if event_state >= RE_DATA.STATES.AVAILABLE and event_loc == selected_loc then
+                    script:sleep(500)
+                    if event_state >= RE.STATES.AVAILABLE and event_variant == selected_loc then
                         gui.show_message("Random Events", "The event has been launched successfully.")
                     else
-                        gui.show_message("Random Events", "There has been an error while launching the event.")
+                        gui.show_error("Random Events", "There has been an error while launching the event.")
                     end
                 else
-                    gui.show_message("Random Events", "The event is already active.")
+                    gui.show_error("Random Events", "The Event is already active.")
                 end
             end)
         end
 
         ImGui.SameLine()
 
-        if not IS_EVENT_EXCEPTION() then
-            if ImGui.Button("Teleport to Event") then
-                script.run_in_fiber(function(script)
-                    if event_state >= RE_DATA.STATES.AVAILABLE then
-                        if event_coords ~= vec3:new(0.0, 0.0, 0.0) then
-                            PED.SET_PED_COORDS_KEEP_VEHICLE(self.get_ped(), event_coords.x, event_coords.y, event_coords.z)
-                        else
-                            gui.show_message("Random Events", "Wait for coordinates to be updated.")
-                        end
+        if ImGui.Button("Teleport to Event") then
+            script.run_in_fiber(function()
+                if event_state >= RE.STATES.AVAILABLE then
+                    if event_coords ~= RE.VECTOR_ZERO then
+                        PED.SET_PED_COORDS_KEEP_VEHICLE(self.get_ped(), event_coords.x, event_coords.y, event_coords.z)
                     else
-                        gui.show_message("Random Events", "The event is not active.")
+                        gui.show_error("Random Events", "Wait for coordinates to be updated.")
                     end
-                end)
-            end
-        else
-            ImGui.BeginDisabled()
-            ImGui.Button("Teleport to Event")
-            ImGui.EndDisabled()
+                else
+                    gui.show_error("Random Events", "The Event is not active.")
+                end
+            end)
         end
 
         ImGui.Separator()
 
-        ImGui.Text("State: " .. (event_state == RE_DATA.STATES.INACTIVE and "Inactive" or event_state == RE_DATA.STATES.AVAILABLE and "Available" or event_state == RE_DATA.STATES.ACTIVE and "Active" or event_state == RE_DATA.STATES.CLEANUP and "Cleanup" or "None"))
+	-- TO-DO: Implement active state timer
+        ImGui.Text("State: " ..
+		(event_state == RE.STATES.INACTIVE and "Inactive (launching in " .. cooldown_time_left .. ")" or
+		event_state == RE.STATES.AVAILABLE and "Available (deactivating in " .. availability_time_left .. ")" or
+		event_state == RE.STATES.ACTIVE and "Active" or
+		event_state == RE.STATES.CLEANUP and "Cleanup" or
+		"None"))
         HELP_MARKER("Shows the current state of the event.\n- Inactive\n- Available\n- Active\n- Cleanup")
 
-        ImGui.Text("Location: " .. (event_loc ~= -1 and event_loc or "None"))
+        ImGui.Text("Location: " .. (event_variant ~= -1 and event_variant or "None"))
         HELP_MARKER("Shows the current location of the event or indicates 'None' if no location is available.")
 
-        ImGui.Text("Trigger Range: " .. (event_state >= RE_DATA.STATES.AVAILABLE and math.floor(trigger_range) .. " meters" or "None"))
+        ImGui.Text("Trigger Range: " .. (event_state >= RE.STATES.AVAILABLE and math.floor(event_trigger_range) .. " meters" or "None"))
         HELP_MARKER("Specifies the distance required to trigger the event when available, or shows 'None' if the event is inactive.")
 
-        ImGui.Text("Blip Range: " .. ((event_state >= RE_DATA.STATES.AVAILABLE and RE_DATA.BLIP_RANGES[selected_event + 1] ~= nil) and math.floor(RE_DATA.BLIP_RANGES[selected_event + 1]) .. " meters" or "None"))
+        ImGui.Text("Blip Range: " .. ((event_state >= RE.STATES.AVAILABLE and event_blip_range ~= nil) and math.floor(event_blip_range) .. " meters" or "None"))
         HELP_MARKER("Specifies the distance for the blip to appear when approaching the event, or shows 'None' if not applicable.")
 
-        ImGui.Text("Entities: " .. num_entities[1] + num_entities[2] + num_entities[3] .. "/" .. max_entities[1] + max_entities[2]+ max_entities[3])
+        ImGui.Text("Entities: "  .. num_entities[1] + num_entities[2] + num_entities[3] .. "/" .. max_entities[1] + max_entities[2]+ max_entities[3])
         HELP_MARKER("Shows the amount of reserved entities for the event out of the maximum allowed.")
 
-        ImGui.Text("Cooldown: " .. event_cooldown .. "ms (" .. math.floor(event_cooldown / 60000) .. " minutes)")
+        ImGui.Text("Cooldown: "  .. event_cooldown .. "ms (" .. math.floor(event_cooldown / 60000) .. " minutes)")
         HELP_MARKER("Shows the time that must pass since session creation for the event to be available.\nDisplayed in milliseconds and minutes.")
 
         ImGui.Text("Availability: " .. event_availability .. "ms (" .. math.floor(event_availability / 60000) .. " minutes)")
@@ -485,31 +606,25 @@ re_tab:add_imgui(function()
         ImGui.Separator()
 
         if ImGui.CollapsingHeader("Cooldown & Availability Editor") then
-            set_cd = ImGui.InputInt("Cooldown##cd", set_cd)
+            set_cooldown = ImGui.InputInt("Cooldown##cooldown", set_cooldown)
 
-            if ImGui.Button("Apply##apply_cd") then
-                if apply_in_min then
-                    locals.set_int("freemode", RE_DATA.FMRE_DATA + (1 + (selected_event * 12)) + 6, set_cd * 60000)
-                else
-                    locals.set_int("freemode", RE_DATA.FMRE_DATA + (1 + (selected_event * 12)) + 6, set_cd)
-                end
+            if ImGui.Button("Apply##apply_cooldown") then
+                local value = apply_in_minutes and (set_cooldown * 60000) or set_cooldown
+                SET_EVENT_COOLDOWN(selected_event, value)
             end
 
-            set_ab = ImGui.InputInt("Availability##ab", set_ab)
+            set_availability = ImGui.InputInt("Availability##availability", set_availability)
 
-            if ImGui.Button("Apply##apply_ab") then
-                if apply_in_min then
-                    locals.set_int("freemode", RE_DATA.FMRE_DATA + (1 + (selected_event * 12)) + 7, set_ab * 60000)
-                else
-                    locals.set_int("freemode", RE_DATA.FMRE_DATA + (1 + (selected_event * 12)) + 7, set_ab)
-                end
+            if ImGui.Button("Apply##apply_availability") then
+                local value = apply_in_minutes and (set_availability * 60000) or set_availability
+                SET_EVENT_AVAILABILITY(selected_event, value)
             end
-
-            apply_in_min = ImGui.Checkbox("Apply in Minutes", apply_in_min)
+        
+            apply_in_minutes = ImGui.Checkbox("Apply in Minutes", apply_in_minutes)
         end
 
         if ImGui.CollapsingHeader("Settings") then
-            if not IS_EVENT_EXCEPTION() and event_state ~= RE_DATA.STATES.INACTIVE then
+            if not IS_EVENT_EXCEPTION() and event_state ~= RE.STATES.INACTIVE then
                 enable_esp = ImGui.Checkbox("ESP", enable_esp)
                 if enable_esp then
                     ImGui.SameLine()
@@ -551,7 +666,10 @@ re_tab:add_imgui(function()
             end
             HELP_MARKER("Bypasses all the requirements to trigger an event such as is tunable enabled, number of players, time of day, etc. Use with caution.")
 
-            if selected_event == RE_DATA.INSTANCES.PHANTOM_CAR or selected_event == RE_DATA.INSTANCES.XMAS_MUGGER then
+            remove_coord_delay = ImGui.Checkbox("Remove Coordinate Delay", remove_coord_delay)
+	    HELP_MARKER("Removes the 5 seconds delay while updating the event coordinates.")
+
+            if selected_event == RE.INSTANCES.PHANTOM_CAR or selected_event == RE.INSTANCES.XMAS_MUGGER then
                 set_target_player = ImGui.Checkbox("Set Target Player", set_target_player)
             else
                 set_target_player = false

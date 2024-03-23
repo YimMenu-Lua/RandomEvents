@@ -177,21 +177,22 @@ local selected_target      = 0
 local selected_loc         = 0
 local set_cooldown         = 1800000
 local set_availability     = 900000
-local enable_line          = true
-local enable_spheres       = true
-local enable_notifications = true
 local apply_in_minutes     = false
 local enable_esp           = false
 local disable_all_events   = false
 local bypass_requirements  = false
 local set_target_player    = false
+local enable_line          = true
+local enable_spheres       = true
+local enable_notifications = true
+local force_freemode_host  = true
 local notified_available   = {}
 local notified_active      = {}
 
-local event_coords           = vec3:new(0.0, 0.0, 0.0)
+local event_coords           = RE.VECTOR_ZERO
+local event_state            = RE.STATES.INACTIVE
 local event_trigger_range    = 0.0
 local event_blip_range       = 0.0
-local event_state            = RE.STATES.INACTIVE
 local event_timer            = 0
 local event_variant          = 0
 local event_cooldown         = 0
@@ -199,11 +200,12 @@ local event_availability     = 0
 local max_num_re             = 0
 local max_events             = 0
 local num_active_events      = 0
+local event_host_id 		 = 0
 local target_player_id       = 0
 local re_initialized         = false
-local is_event_script_active = false
-local cooldown_time_left     = ""
-local availability_time_left = ""
+local cooldown_time_left     = "00:00:00"
+local availability_time_left = "00:00:00"
+local event_host_name 		 = "**Invalid**"
 local max_entities           = {}
 local num_entities           = {}
 local target_players         = {}
@@ -245,6 +247,11 @@ end
 
 local function SET_EVENT_AVAILABILITY(event, value)
     locals.set_int("freemode", RE.FMRE_DATA + (1 + (event * 12)) + 7, value)
+end
+
+local function SET_EVENT_TARGET(target_id)
+	globals.set_int(RE.GSBD_RE + 304, target_id) -- Phantom Car Target (Also the Slasher target, but it doesn't work)
+	globals.set_int(RE.GSBD_RE + 304 + 1, target_id) -- Gooch Target
 end
 
 local function SET_EVENT_END_REASON(event, reason)
@@ -343,23 +350,13 @@ local function LOOPED_UPDATE_RE_INFO()
     max_entities[1]        = tunables.get_int("FMREMAXRESERVEDPEDS")
     max_entities[2]        = tunables.get_int("FMREMAXRESERVEDVEHICLES")
     max_entities[3]        = tunables.get_int("FMREMAXRESERVEDOBJECTS")
-    is_event_script_active = SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat(RE.SCRIPTS[selected_event + 1])) ~= 0
+    event_host_id 		   = NETWORK.NETWORK_GET_HOST_OF_SCRIPT(RE.SCRIPTS[selected_event + 1], selected_event, 0)
+	event_host_name 	   = PLAYER.GET_PLAYER_NAME(event_host_id)
 	num_active_events      = GET_NUM_LOCALLY_ACTIVE_EVENTS()
     cooldown_time_left     = GET_EVENT_TIME_LEFT(event_cooldown)
     availability_time_left = GET_EVENT_TIME_LEFT(event_availability)
     target_players         = GET_TARGET_PLAYERS()
     event_blip_range       = RE.BLIP_RANGES[selected_event + 1]
-
-    if disable_all_events then
-        HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_FALSE)
-    end
-    if bypass_requirements then
-        HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_TRUE)
-    end
-    if set_target_player then
-        globals.set_int(RE.GSBD_RE + 304, target_player_id) -- Phantom Car Target (Also the Slasher target, but it doesn't work)
-        globals.set_int(RE.GSBD_RE + 304 + 1, target_player_id) -- Gooch Target
-    end
 end
 
 local function LOOPED_RENDER_ESP()
@@ -393,7 +390,7 @@ local function LOOPED_RENDER_ESP()
     end
 end
 
-function LOOPED_NOTIFY_PLAYER()
+local function LOOPED_NOTIFY_PLAYER()
     for i = 0, max_num_re - 1 do
         local state = globals.get_int(RE.GSBD_RE + 1 + (1 + (i * 15)))
 
@@ -445,6 +442,22 @@ script.register_looped("Random Events", function()
             LOOPED_RENDER_ESP()
         end
 
+		if disable_all_events then
+			HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_FALSE)
+		end
+		
+		if bypass_requirements then
+			HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_TRUE)
+		end
+		
+		if set_target_player then
+			SET_EVENT_TARGET(target_player_id)
+		end
+		
+		if force_freemode_host and NETWORK.NETWORK_GET_HOST_OF_SCRIPT("freemode", -1, 0) ~= self.get_id() then
+			network.force_script_host("freemode")
+		end
+
         if enable_notifications then
             LOOPED_NOTIFY_PLAYER()
         end
@@ -487,7 +500,7 @@ re_tab:add_imgui(function()
             ImGui.EndCombo()
         end
 
-        if set_target_player then
+        if set_target_player and (selected_event == RE.INSTANCES.PHANTOM_CAR or selected_event == RE.INSTANCES.XMAS_MUGGER) then
             selected_target = CLAMP(selected_target, 0, #target_players - 1)
 
             if ImGui.BeginCombo("Select Target", target_players[selected_target + 1].name) then
@@ -548,10 +561,10 @@ re_tab:add_imgui(function()
 			if event_state == RE.STATES.AVAILABLE then
 				SET_EVENT_STATE(selected_event, RE.STATES.CLEANUP)
 			elseif event_state == RE.STATES.ACTIVE then
-				if is_event_script_active then
+				if event_host_id == self.get_id() then
 					SET_EVENT_END_REASON(selected_event + 1, 3)
 				else
-					gui.show_error("Random Events", "Failed to kill event. You must be a participant.")
+					gui.show_error("Random Events", "Failed to kill event. You must be event host.")
 				end
 			else
 				gui.show_error("Random Events", "Event is not active.")
@@ -589,6 +602,28 @@ re_tab:add_imgui(function()
 			event_state == RE.STATES.CLEANUP and "Cleanup" or
 			"None"))
         HELP_MARKER("Shows the current state of the event.\n- Inactive\n- Available\n- Active\n- Cleanup")
+		
+		if event_state == RE.STATES.ACTIVE then
+			ImGui.Text("Host: " .. event_host_name)
+			
+			ImGui.SameLine()
+			
+			if event_host_id ~= self.get_id() then
+				if ImGui.SmallButton("Take Control") then
+					script.run_in_fiber(function()
+						if SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat(RE.SCRIPTS[selected_event + 1])) ~= 0 then
+							network.force_script_host(RE.SCRIPTS[selected_event + 1])
+						else
+							gui.show_error("Random Events", "Event script is not active. Are you a participant?")
+						end
+					end)
+				end
+			else
+				ImGui.BeginDisabled()
+				ImGui.SmallButton("Take Control")
+				ImGui.EndDisabled()
+			end
+		end
 
         ImGui.Text("Location: " .. (event_variant ~= -1 and event_variant or "N/A"))
         HELP_MARKER("Shows the current location of the event.")
@@ -614,15 +649,27 @@ re_tab:add_imgui(function()
             set_cooldown = ImGui.InputInt("Cooldown##cooldown", set_cooldown)
 
             if ImGui.Button("Apply##apply_cooldown") then
-                local value = apply_in_minutes and (set_cooldown * 60000) or set_cooldown
-                SET_EVENT_COOLDOWN(selected_event, value)
+                script.run_in_fiber(function(script)
+					local value = apply_in_minutes and (set_cooldown * 60000) or set_cooldown
+					SET_EVENT_COOLDOWN(selected_event, value)
+					script:sleep(500)
+					if event_cooldown ~= value then
+						gui.show_error("Random Events", "Failed to set event cooldown. Are you freemode host?")
+					end
+				end)
             end
 
             set_availability = ImGui.InputInt("Availability##availability", set_availability)
 
             if ImGui.Button("Apply##apply_availability") then
-                local value = apply_in_minutes and (set_availability * 60000) or set_availability
-                SET_EVENT_AVAILABILITY(selected_event, value)		
+                script.run_in_fiber(function(script)
+					local value = apply_in_minutes and (set_availability * 60000) or set_availability
+					SET_EVENT_AVAILABILITY(selected_event, value)
+					script:sleep(500)
+					if event_cooldown ~= value then
+						gui.show_error("Random Events", "Failed to set event availability. Are you freemode host?")
+					end
+				end)
             end
         
             apply_in_minutes = ImGui.Checkbox("Apply in Minutes", apply_in_minutes)
@@ -672,7 +719,13 @@ re_tab:add_imgui(function()
             HELP_MARKER("Bypasses all the requirements to trigger an event such as is tunable enabled, number of players, time of day, etc. Use with caution.")
 
             if selected_event == RE.INSTANCES.PHANTOM_CAR or selected_event == RE.INSTANCES.XMAS_MUGGER then
-                set_target_player = ImGui.Checkbox("Set Target Player", set_target_player)
+                set_target_player, on_tick = ImGui.Checkbox("Set Target Player", set_target_player)
+				
+				if on_tick then
+					if not set_target_player then
+						SET_EVENT_TARGET(-1)
+					end
+				end
             else
                 set_target_player = false
                 ImGui.BeginDisabled()
@@ -683,6 +736,9 @@ re_tab:add_imgui(function()
 
             enable_notifications = ImGui.Checkbox("Notifications", enable_notifications)
             HELP_MARKER("Notifies you whenever an event is available or active.")
+			
+			force_freemode_host = ImGui.Checkbox("Force Freemode Host", force_freemode_host)
+			HELP_MARKER("Forces you to always become freemode host. It is REQUIRED for script to work correctly.")
         end
     else
         ImGui.Text("Random Events aren't initialized yet.")

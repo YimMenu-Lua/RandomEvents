@@ -179,9 +179,9 @@ local set_cooldown         = 1800000
 local set_availability     = 900000
 local apply_in_minutes     = false
 local enable_esp           = false
-local disable_all_events   = false
-local bypass_requirements  = false
 local set_target_player    = false
+local bypass_requirements  = false
+local disable_all_events   = false
 local enable_line          = true
 local enable_spheres       = true
 local enable_notifications = true
@@ -191,10 +191,10 @@ local notified_active      = {}
 
 local event_coords           = RE.VECTOR_ZERO
 local event_state            = RE.STATES.INACTIVE
+local event_blip_range       = RE.BLIP_RANGES[selected_event + 1]
 local event_trigger_range    = 0.0
-local event_blip_range       = 0.0
 local event_timer            = 0
-local event_variant          = 0
+local event_variation        = 0
 local event_cooldown         = 0
 local event_availability     = 0
 local max_num_re             = 0
@@ -206,13 +206,11 @@ local re_initialized         = false
 local cooldown_time_left     = "00:00:00"
 local availability_time_left = "00:00:00"
 local event_host_name 		 = "**Invalid**"
-local max_entities           = {}
-local num_entities           = {}
 local target_players         = {}
 
-local function REQUEST_RANDOM_EVENT(event, variant)
+local function REQUEST_RANDOM_EVENT(event, variation)
     local fmmc_type = locals.get_int("freemode", RE.FMRE_DATA + 241 + 1 + (event + 1))
-    local args      = { RE.REQUEST_RE_HASH, 0, -1, fmmc_type, 0, variant, 0 }
+    local args      = { RE.REQUEST_RE_HASH, 0, -1, fmmc_type, 0, variation, 0 }
 	
     network.trigger_script_event(-1, args)
 end
@@ -261,8 +259,40 @@ local function SET_EVENT_END_REASON(event, reason)
 	locals.set_int(RE.SCRIPTS[event], base_address + offset, reason)
 end
 
-local function IS_EVENT_EXCEPTION()
-    return selected_event == RE.INSTANCES.PHANTOM_CAR or selected_event == RE.INSTANCES.SIGHTSEEING or selected_event == RE.INSTANCES.XMAS_MUGGER or selected_event == RE.INSTANCES.GHOSTHUNT
+local function ARE_EVENTS_INITIALIZED()
+	return globals.get_int(RE.GPBD_FM_2 + (1 + (self.get_id() * 142)) + 78) == 1
+end
+
+local function GET_MAX_NUMBER_OF_EVENTS()
+	return locals.get_int("freemode", RE.FMRE_DATA + 241)
+end
+
+local function GET_EVENT_STATE(event)
+	return globals.get_int(RE.GSBD_RE + 1 + (1 + (event * 15)))
+end
+
+local function GET_EVENT_VARIATION(event)
+	return globals.get_int(RE.GSBD_RE + 1 + (1 + (event * 15)) + 6)
+end
+
+local function GET_EVENT_COORDS(event)
+	return globals.get_vec3(RE.GSBD_RE + 1 + (1 + (event * 15)) + 10)
+end
+
+local function GET_EVENT_TRIGGER_RANGE(event)
+	return globals.get_float(RE.GSBD_RE + 1 + (1 + (event * 15)) + 13)
+end
+
+local function GET_EVENT_TIMER(event)
+	return globals.get_int(RE.GSBD_RE + 1 + (1 + (event * 15)) + 1)
+end
+
+local function GET_EVENT_COOLDOWN(event)
+	return locals.get_int("freemode", RE.FMRE_DATA + (1 + (event * 12)) + 6)
+end
+
+local function GET_EVENT_AVAILABILITY(event)
+	return locals.get_int("freemode", RE.FMRE_DATA + (1 + (event * 12)) + 7)
 end
 
 local function GET_NUM_LOCALLY_ACTIVE_EVENTS()
@@ -305,16 +335,41 @@ local function GET_TARGET_PLAYERS()
     return player_table
 end
 
-local function GET_EVENT_TIME_LEFT(event_time)
-    local time_passed   = MISC.ABSI(NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_NETWORK_TIME(), event_timer))
+local function GET_EVENT_TIME_LEFT(event_time, timer)
+    local time_passed   = MISC.ABSI(NETWORK.GET_TIME_DIFFERENCE(NETWORK.GET_NETWORK_TIME(), timer))
     local diff 	        = NETWORK.GET_TIME_DIFFERENCE(event_time, time_passed)
     local total_seconds = math.floor(diff / 1000)
     local hours         = math.floor(total_seconds / 3600)
     local minutes       = math.floor((total_seconds % 3600) / 60)
     local seconds       = total_seconds % 60
-    local formatted     = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+	local formatted		= ""
+    
+    if hours < 1 then
+        formatted = string.format("%02d:%02d", minutes, seconds)
+    else
+        formatted = string.format("%02d:%02d:%02d", hours, minutes, seconds)
+    end
     
     return formatted
+end
+
+local function IS_EVENT_EXCEPTION(event)
+    return event == RE.INSTANCES.PHANTOM_CAR or event == RE.INSTANCES.SIGHTSEEING or event == RE.INSTANCES.XMAS_MUGGER or event == RE.INSTANCES.GHOSTHUNT
+end
+
+local function CLAMP(value, min, max)
+    return math.min(math.max(value, min), max)
+end
+
+local function COMBO_CLEANUP()
+	selected_loc   = 0
+	if selected_event == RE.INSTANCES.ARMOURED_TRUCK then
+		set_cooldown     = globals.get_int(RE.COOLDOWNS[selected_event + 1])
+		set_availability = globals.get_int(RE.AVAILABILITIES[selected_event + 1])
+	else
+		set_cooldown     = tunables.get_int(RE.COOLDOWNS[selected_event + 1])
+		set_availability = tunables.get_int(RE.AVAILABILITIES[selected_event + 1])
+	end
 end
 
 local function HELP_MARKER(text)
@@ -329,65 +384,66 @@ local function HELP_MARKER(text)
     end
 end
 
-local function CLAMP(value, min, max)
-    return math.min(math.max(value, min), max)
-end
-
 local function LOOPED_UPDATE_RE_INFO()
-    event_coords           = globals.get_vec3(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 10)
-    event_trigger_range    = globals.get_float(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 13)
-    event_state            = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)))
-    event_timer            = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 1)
-    event_variant          = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 6)
-    num_entities[1]        = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7)
-    num_entities[2]        = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7 + 1)
-    num_entities[3]        = globals.get_int(RE.GSBD_RE + 1 + (1 + (selected_event * 15)) + 7 + 2)
-    re_initialized         = globals.get_int(RE.GPBD_FM_2 + (1 + (self.get_id() * 142)) + 78) == 1
-    max_num_re             = locals.get_int("freemode", RE.FMRE_DATA + 241)
-    event_cooldown         = locals.get_int("freemode", RE.FMRE_DATA + (1 + (selected_event * 12)) + 6)
-    event_availability     = locals.get_int("freemode", RE.FMRE_DATA + (1 + (selected_event * 12)) + 7)
-    max_events             = tunables.get_int("FMREMAXACTIVATEDEVENTS")
-    max_entities[1]        = tunables.get_int("FMREMAXRESERVEDPEDS")
-    max_entities[2]        = tunables.get_int("FMREMAXRESERVEDVEHICLES")
-    max_entities[3]        = tunables.get_int("FMREMAXRESERVEDOBJECTS")
+    re_initialized         = ARE_EVENTS_INITIALIZED()
+    max_num_re             = GET_MAX_NUMBER_OF_EVENTS()
+	num_active_events      = GET_NUM_LOCALLY_ACTIVE_EVENTS()
+	target_players         = GET_TARGET_PLAYERS()
+	event_state            = GET_EVENT_STATE(selected_event)
+	event_coords           = GET_EVENT_COORDS(selected_event)
+	event_variation        = GET_EVENT_VARIATION(selected_event)
+    event_trigger_range    = GET_EVENT_TRIGGER_RANGE(selected_event)
+    event_timer            = GET_EVENT_TIMER(selected_event)
+    event_cooldown         = GET_EVENT_COOLDOWN(selected_event)
+    event_availability     = GET_EVENT_AVAILABILITY(selected_event)
+    cooldown_time_left     = GET_EVENT_TIME_LEFT(event_cooldown, event_timer)
+    availability_time_left = GET_EVENT_TIME_LEFT(event_availability, event_timer)	
     event_host_id 		   = NETWORK.NETWORK_GET_HOST_OF_SCRIPT(RE.SCRIPTS[selected_event + 1], selected_event, 0)
 	event_host_name 	   = PLAYER.GET_PLAYER_NAME(event_host_id)
-	num_active_events      = GET_NUM_LOCALLY_ACTIVE_EVENTS()
-    cooldown_time_left     = GET_EVENT_TIME_LEFT(event_cooldown)
-    availability_time_left = GET_EVENT_TIME_LEFT(event_availability)
-    target_players         = GET_TARGET_PLAYERS()
+    max_active_events      = tunables.get_int("FMREMAXACTIVATEDEVENTS")
     event_blip_range       = RE.BLIP_RANGES[selected_event + 1]
 end
 
 local function LOOPED_RENDER_ESP()
-    local distance           = MISC.GET_DISTANCE_BETWEEN_COORDS(self.get_pos().x, self.get_pos().y, self.get_pos().z, event_coords.x, event_coords.y, event_coords.z, false)
-    local km_or_m            = (distance < 1000) and "m" or "km"
-    local formatted_distance = (distance < 1000) and distance or (distance / 1000.0)
-    local screen_coords_x    = 0.0
-    local screen_coords_y    = 0.0
-
-    _, screen_coords_x, screen_coords_y = GRAPHICS.GET_SCREEN_COORD_FROM_WORLD_COORD(event_coords.x, event_coords.y, event_coords.z, screen_coords_x, screen_coords_y)
-    if enable_line then
-        GRAPHICS.DRAW_LINE(self.get_pos().x, self.get_pos().y, self.get_pos().z, event_coords.x, event_coords.y, event_coords.z, 93, 182, 229, 255)
-		GRAPHICS.REQUEST_STREAMED_TEXTURE_DICT("CommonMenu", false)
-		GRAPHICS.DRAW_SPRITE("CommonMenu", "Common_Medal", screen_coords_x, screen_coords_y, 0.03, 0.06, 0.0, 93, 182, 229, 255, false, 0)
-    end
-    HUD.BEGIN_TEXT_COMMAND_DISPLAY_TEXT("STRING")
-    HUD.ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(string.format("%s (%.2f%s)", (event_state == RE.STATES.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. RE.NAMES[selected_event + 1] .. "~s~", formatted_distance, km_or_m))
-    HUD.SET_TEXT_RENDER_ID(1)
-    HUD.SET_TEXT_OUTLINE()
-    HUD.SET_TEXT_CENTRE(true)
-    HUD.SET_TEXT_DROP_SHADOW()
-    HUD.SET_TEXT_SCALE(0, 0.3)
-    HUD.SET_TEXT_FONT(4)
-    HUD.SET_TEXT_COLOUR(255, 255, 255, 240)
-    HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_coords_x, screen_coords_y - 0.03, 0)
-    if enable_spheres then
-        GRAPHICS.DRAW_MARKER(28, event_coords.x, event_coords.y, event_coords.z, 0, 0, 0, 0, 180, 0, event_trigger_range, event_trigger_range, event_trigger_range, 0, 153, 51, 40, true, true, 2, false, nil, nil, false)
-        if event_blip_range ~= nil then
-            GRAPHICS.DRAW_MARKER(28, event_coords.x, event_coords.y, event_coords.z, 0, 0, 0, 0, 180, 0, event_blip_range, event_blip_range, event_blip_range, 93, 182, 229, 40, true, true, 2, false, nil, nil, false)
-        end
-    end
+    for i = 0, max_num_re - 1 do
+		local state 		= GET_EVENT_STATE(i)
+		local coords 		= GET_EVENT_COORDS(i)
+		local timer 		= GET_EVENT_TIMER(i)
+		local availability  = GET_EVENT_AVAILABILITY(i)
+		local time_left		= GET_EVENT_TIME_LEFT(availability, timer)
+		local trigger_range = GET_EVENT_TRIGGER_RANGE(i)
+		local blip_range 	= RE.BLIP_RANGES[i + 1]
+		
+		if not IS_EVENT_EXCEPTION(i) and state ~= RE.STATES.INACTIVE and coords ~= RE.VECTOR_ZERO then
+			local distance           = MISC.GET_DISTANCE_BETWEEN_COORDS(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, false)
+			local km_or_m            = (distance < 1000) and "m" or "km"
+			local formatted_distance = (distance < 1000) and distance or (distance / 1000.0)
+			local text 				 = string.format("%s (%.2f%s) %s", (state == RE.STATES.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. RE.NAMES[i + 1] .. "~s~", formatted_distance, km_or_m, (state == RE.STATES.AVAILABLE and "~n~" .. time_left or ""))
+			local screen_coords_x    = 0.0
+			local screen_coords_y    = 0.0
+			
+			_, screen_coords_x, screen_coords_y = GRAPHICS.GET_SCREEN_COORD_FROM_WORLD_COORD(coords.x, coords.y, coords.z, screen_coords_x, screen_coords_y)
+			if enable_line then
+				GRAPHICS.DRAW_LINE(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, 93, 182, 229, 255)
+			end	
+			HUD.BEGIN_TEXT_COMMAND_DISPLAY_TEXT("STRING")
+			HUD.ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(text)
+			HUD.SET_TEXT_RENDER_ID(1)
+			HUD.SET_TEXT_OUTLINE()
+			HUD.SET_TEXT_CENTRE(true)
+			HUD.SET_TEXT_DROP_SHADOW()
+			HUD.SET_TEXT_SCALE(0, 0.3)
+			HUD.SET_TEXT_FONT(4)
+			HUD.SET_TEXT_COLOUR(255, 255, 255, 240)
+			HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_coords_x, screen_coords_y - 0.03, 0)	
+			if enable_spheres then
+				GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, 0, 153, 51, 40, true, true, 2, false, nil, nil, false)
+				if blip_range ~= nil then
+					GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, blip_range, blip_range, blip_range, 93, 182, 229, 40, true, true, 2, false, nil, nil, false)
+				end
+			end
+		end
+	end
 end
 
 local function LOOPED_NOTIFY_PLAYER()
@@ -438,7 +494,7 @@ script.register_looped("Random Events", function()
     LOOPED_UPDATE_RE_INFO()
 
     if re_initialized then
-        if enable_esp and event_coords ~= RE.VECTOR_ZERO then
+        if enable_esp then
             LOOPED_RENDER_ESP()
         end
 
@@ -481,14 +537,7 @@ re_tab:add_imgui(function()
 
                 if ImGui.Selectable(RE.NAMES[i], is_selected) then
                     selected_event = i - 1
-                    selected_loc   = 0
-                    if selected_event == RE.INSTANCES.ARMOURED_TRUCK then
-                        set_cooldown     = globals.get_int(RE.COOLDOWNS[selected_event + 1])
-                        set_availability = globals.get_int(RE.AVAILABILITIES[selected_event + 1])
-                    else
-                        set_cooldown     = tunables.get_int(RE.COOLDOWNS[selected_event + 1])
-                        set_availability = tunables.get_int(RE.AVAILABILITIES[selected_event + 1])
-                    end
+					COMBO_CLEANUP()
                 end
 
                 if is_selected then
@@ -520,7 +569,7 @@ re_tab:add_imgui(function()
             end
         end
 
-        if not IS_EVENT_EXCEPTION() and selected_event ~= RE.INSTANCES.VEHICLE_LIST and selected_event ~= RE.INSTANCES.BANK_SHOOTOUT and selected_event ~= RE.INSTANCES.XMAS_TRUCK then
+        if not IS_EVENT_EXCEPTION(selected_event) and selected_event ~= RE.INSTANCES.VEHICLE_LIST and selected_event ~= RE.INSTANCES.BANK_SHOOTOUT and selected_event ~= RE.INSTANCES.XMAS_TRUCK then
             selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. RE.MAX_LOCATIONS[selected_event + 1] .. ")", selected_loc)
 
             if on_modified then
@@ -532,10 +581,10 @@ re_tab:add_imgui(function()
             ImGui.EndDisabled()
         end
 
-        if num_active_events >= max_events then
-            ImGui.TextColored(1, 0, 0, 1, "Active Events: " .. num_active_events .. "/" .. max_events)
+        if num_active_events >= max_active_events then
+            ImGui.TextColored(1, 0, 0, 1, "Active Events: " .. num_active_events .. "/" .. max_active_events)
         else
-            ImGui.Text("Active Events: " .. num_active_events .. "/" .. max_events)
+            ImGui.Text("Active Events: " .. num_active_events .. "/" .. max_active_events)
         end
         HELP_MARKER("Shows the current number of active events (locally) out of the maximum allowed.")
 
@@ -544,9 +593,7 @@ re_tab:add_imgui(function()
                 if event_state ~= RE.STATES.ACTIVE then
                     REQUEST_RANDOM_EVENT(selected_event, selected_loc)
                     script:sleep(500)
-                    if event_state >= RE.STATES.AVAILABLE and event_variant == selected_loc then
-                        gui.show_message("Random Events", "Successfully launched event.")
-                    else
+                    if event_state == RE.STATES.INACTIVE and event_variation ~= selected_loc then
                         gui.show_error("Random Events", "Failed to launch event. Are you freemode host?")
                     end
                 else
@@ -573,7 +620,7 @@ re_tab:add_imgui(function()
 		
         ImGui.SameLine()
 
-        if not IS_EVENT_EXCEPTION() then
+        if not IS_EVENT_EXCEPTION(selected_event) then
 			if ImGui.Button("Teleport to Event") then
 				script.run_in_fiber(function()
 					if event_state >= RE.STATES.AVAILABLE then
@@ -625,7 +672,7 @@ re_tab:add_imgui(function()
 			end
 		end
 
-        ImGui.Text("Location: " .. (event_variant ~= -1 and event_variant or "N/A"))
+        ImGui.Text("Location: " .. (event_variation ~= -1 and event_variation or "N/A"))
         HELP_MARKER("Shows the current location of the event.")
 
         ImGui.Text("Trigger Range: " .. (event_state >= RE.STATES.AVAILABLE and math.floor(event_trigger_range) .. " meters" or "N/A"))
@@ -633,9 +680,6 @@ re_tab:add_imgui(function()
 
         ImGui.Text("Blip Range: " .. ((event_state >= RE.STATES.AVAILABLE and event_blip_range ~= nil) and math.floor(event_blip_range) .. " meters" or "N/A"))
         HELP_MARKER("Shows the distance for the blip to appear when approaching the event (if applicable).")
-
-        ImGui.Text("Entities: "  .. num_entities[1] + num_entities[2] + num_entities[3] .. "/" .. max_entities[1] + max_entities[2]+ max_entities[3])
-        HELP_MARKER("Shows the amount of reserved entities for the event out of the maximum allowed.")
 
         ImGui.Text("Cooldown: "  .. math.floor(event_cooldown / 60000) .. " minutes")
         HELP_MARKER("Shows the duration that the event will be in the inactive state.")
@@ -666,7 +710,7 @@ re_tab:add_imgui(function()
 					local value = apply_in_minutes and (set_availability * 60000) or set_availability
 					SET_EVENT_AVAILABILITY(selected_event, value)
 					script:sleep(500)
-					if event_cooldown ~= value then
+					if event_availability ~= value then
 						gui.show_error("Random Events", "Failed to set event availability. Are you freemode host?")
 					end
 				end)
@@ -676,48 +720,16 @@ re_tab:add_imgui(function()
         end
 
         if ImGui.CollapsingHeader("Settings") then
-            if not IS_EVENT_EXCEPTION() and event_state ~= RE.STATES.INACTIVE then
-                enable_esp = ImGui.Checkbox("ESP", enable_esp)
-                if enable_esp then
-                    ImGui.SameLine()
-                    enable_spheres = ImGui.Checkbox("Spheres", enable_spheres)
-                    ImGui.SameLine()
-                    enable_line = ImGui.Checkbox("Line", enable_line)
-                end
-            else
-                enable_esp = false
-                ImGui.BeginDisabled()
-                ImGui.Checkbox("ESP", enable_esp)
-                ImGui.EndDisabled()
-            end
+			enable_esp = ImGui.Checkbox("ESP", enable_esp)
+			if enable_esp then
+				ImGui.SameLine()
+				enable_spheres = ImGui.Checkbox("Spheres", enable_spheres)
+				ImGui.SameLine()
+				enable_line = ImGui.Checkbox("Line", enable_line)
+			end
 
             ImGui.Separator()
-
-            disable_all_events, on_tick = ImGui.Checkbox("Disable All Events", disable_all_events)
-            HELP_MARKER("Prevents all the events from being triggered.")
-
-            if on_tick then
-                if not disable_all_events then
-                    RESTORE_SHOULD_TRIGGER_FUNCTIONS()
-                end
-            end
-
-            if not disable_all_events then
-                bypass_requirements, on_tick = ImGui.Checkbox("Bypass Requirements", bypass_requirements)
-
-                if on_tick then
-                    if not bypass_requirements then
-                        RESTORE_SHOULD_TRIGGER_FUNCTIONS()
-                    end
-                end
-            else
-                bypass_requirements = false
-                ImGui.BeginDisabled()
-                ImGui.Checkbox("Bypass Requirements", bypass_requirements)
-                ImGui.EndDisabled()
-            end
-            HELP_MARKER("Bypasses all the requirements to trigger an event such as is tunable enabled, number of players, time of day, etc. Use with caution.")
-
+			
             if selected_event == RE.INSTANCES.PHANTOM_CAR or selected_event == RE.INSTANCES.XMAS_MUGGER then
                 set_target_player, on_tick = ImGui.Checkbox("Set Target Player", set_target_player)
 				
@@ -732,13 +744,38 @@ re_tab:add_imgui(function()
                 ImGui.Checkbox("Set Target Player", set_target_player)
                 ImGui.EndDisabled()
             end
-            HELP_MARKER("Allows you to set the target of Phantom Car and Gooch.")
+            HELP_MARKER("Allows you to set the target of Phantom Car and Gooch.")			
+			
+            if not disable_all_events then
+                bypass_requirements, on_tick = ImGui.Checkbox("Bypass Requirements", bypass_requirements)
+
+                if on_tick then
+                    if not bypass_requirements then
+                        RESTORE_SHOULD_TRIGGER_FUNCTIONS()
+                    end
+                end
+            else
+                bypass_requirements = false
+                ImGui.BeginDisabled()
+                ImGui.Checkbox("Bypass Requirements", bypass_requirements)
+                ImGui.EndDisabled()
+            end
+            HELP_MARKER("Bypasses all the requirements to trigger an event such as is tunable enabled, number of players, time of day, etc. Use with caution.")			
+
+            disable_all_events, on_tick = ImGui.Checkbox("Disable All Events", disable_all_events)
+            HELP_MARKER("Prevents all the events from being triggered.")
+
+            if on_tick then
+                if not disable_all_events then
+                    RESTORE_SHOULD_TRIGGER_FUNCTIONS()
+                end
+            end
 
             enable_notifications = ImGui.Checkbox("Notifications", enable_notifications)
             HELP_MARKER("Notifies you whenever an event is available or active.")
 			
 			force_freemode_host = ImGui.Checkbox("Force Freemode Host", force_freemode_host)
-			HELP_MARKER("Forces you to always become freemode host. It is REQUIRED for script to work correctly.")
+			HELP_MARKER("Forces you to always become freemode host. It is required for script to work correctly.")
         end
     else
         ImGui.Text("Random Events aren't initialized yet.")

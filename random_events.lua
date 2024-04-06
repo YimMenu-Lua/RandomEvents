@@ -5,8 +5,8 @@ local RE = {
 	GSBD_RE		    = 1882037,
 	GPBD_FM_2	    = 1882422,
 	FMRE_DATA	    = 15544,
-	RETURN_FALSE	= 504300, -- func_1034 - 0x7B1EC
 	RETURN_TRUE	    = 29788,  -- func_144  - 0x745C
+	RETURN_FALSE	= 504300, -- func_1034 - 0x7B1EC
     VECTOR_ZERO     = vec3:new(0.0, 0.0, 0.0),
 	MAX_LOCATIONS	= { 29, 8, 9, 49, 7, 0, 25, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 8, 0 },
 	BLIP_RANGES	    = { 200.0, nil, 200.0, nil, nil, nil, nil, 400.0, nil, nil, 200.0, 200.0, 200.0, 100.0, nil, nil, 200.0, nil, nil, nil },	
@@ -177,15 +177,15 @@ local selected_target      = 0
 local selected_loc         = 0
 local set_cooldown         = 1800000
 local set_availability     = 900000
+local enable_line          = true
+local enable_spheres       = true
+local enable_notifications = true
+local force_freemode_host  = true
 local apply_in_minutes     = false
 local enable_esp           = false
 local set_target_player    = false
 local bypass_requirements  = false
 local disable_all_events   = false
-local enable_line          = true
-local enable_spheres       = true
-local enable_notifications = true
-local force_freemode_host  = true
 local notified_available   = {}
 local notified_active      = {}
 
@@ -208,6 +208,7 @@ local availability_time_left = "00:00:00"
 local event_host_name 		 = "**Invalid**"
 local target_players         = {}
 
+-- This enables the first bit of Global_1882037.f_1[event /*15*/].f_3, which the script ignores all the checks if it is enabled
 local function REQUEST_RANDOM_EVENT(event, variation)
     local fmmc_type = locals.get_int("freemode", RE.FMRE_DATA + 241 + 1 + (event + 1))
     local args      = { RE.REQUEST_RE_HASH, 0, -1, fmmc_type, 0, variation, 0 }
@@ -215,6 +216,7 @@ local function REQUEST_RANDOM_EVENT(event, variation)
     network.trigger_script_event(-1, args)
 end
 
+-- This replaces the function that the local points to with another function in freemode (in this use case, they are replaced with two functions that always return true or false)
 local function HOOK_SHOULD_TRIGGER_FUNCTIONS(value)
     for i = 0, max_num_re - 1 do
         if i == RE.INSTANCES.PHANTOM_CAR or i == RE.INSTANCES.XMAS_MUGGER or i == RE.INSTANCES.XMAS_TRUCK then
@@ -422,10 +424,12 @@ local function LOOPED_RENDER_ESP()
 			local screen_coords_x    = 0.0
 			local screen_coords_y    = 0.0
 			
-			_, screen_coords_x, screen_coords_y = GRAPHICS.GET_SCREEN_COORD_FROM_WORLD_COORD(coords.x, coords.y, coords.z, screen_coords_x, screen_coords_y)
+			_, screen_coords_x, screen_coords_y = GRAPHICS.GET_SCREEN_COORD_FROM_WORLD_COORD(coords.x, coords.y, coords.z, screen_coords_x, screen_coords_y)			
+			
 			if enable_line then
 				GRAPHICS.DRAW_LINE(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, 93, 182, 229, 255)
-			end	
+			end
+			
 			HUD.BEGIN_TEXT_COMMAND_DISPLAY_TEXT("STRING")
 			HUD.ADD_TEXT_COMPONENT_SUBSTRING_PLAYER_NAME(text)
 			HUD.SET_TEXT_RENDER_ID(1)
@@ -435,7 +439,8 @@ local function LOOPED_RENDER_ESP()
 			HUD.SET_TEXT_SCALE(0, 0.3)
 			HUD.SET_TEXT_FONT(4)
 			HUD.SET_TEXT_COLOUR(255, 255, 255, 240)
-			HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_coords_x, screen_coords_y - 0.03, 0)	
+			HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_coords_x, screen_coords_y - 0.03, 0)
+			
 			if enable_spheres then
 				GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, 0, 153, 51, 40, true, true, 2, false, nil, nil, false)
 				if blip_range ~= nil then
@@ -448,7 +453,7 @@ end
 
 local function LOOPED_NOTIFY_PLAYER()
     for i = 0, max_num_re - 1 do
-        local state = globals.get_int(RE.GSBD_RE + 1 + (1 + (i * 15)))
+        local state = GET_EVENT_STATE(i)
 
         if state == RE.STATES.ACTIVE then
             if not notified_active[i] then
@@ -497,13 +502,13 @@ script.register_looped("Random Events", function()
         if enable_esp then
             LOOPED_RENDER_ESP()
         end
-
-		if disable_all_events then
-			HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_FALSE)
-		end
 		
 		if bypass_requirements then
 			HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_TRUE)
+		end
+		
+		if disable_all_events then
+			HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.RETURN_FALSE)
 		end
 		
 		if set_target_player then
@@ -525,7 +530,7 @@ re_tab:add_imgui(function()
         if ImGui.BeginCombo("Select Event", RE.NAMES[selected_event + 1]) then
             for i = 1, #RE.NAMES do
                 local is_selected = (i - 1 == selected_event)
-                local state = globals.get_int(RE.GSBD_RE + 1 + (1 + ((i - 1) * 15)))
+                local state 	  = GET_EVENT_STATE(i - 1)
 
                 if state == RE.STATES.INACTIVE then
                     ImGui.PushStyleColor(ImGuiCol.Text, 1, 0, 0, 1)
@@ -744,7 +749,7 @@ re_tab:add_imgui(function()
                 ImGui.Checkbox("Set Target Player", set_target_player)
                 ImGui.EndDisabled()
             end
-            HELP_MARKER("Allows you to set the target of Phantom Car and Gooch.")			
+            HELP_MARKER("Allows you to set the target of Phantom Car and Gooch.")
 			
             if not disable_all_events then
                 bypass_requirements, on_tick = ImGui.Checkbox("Bypass Requirements", bypass_requirements)
@@ -760,7 +765,7 @@ re_tab:add_imgui(function()
                 ImGui.Checkbox("Bypass Requirements", bypass_requirements)
                 ImGui.EndDisabled()
             end
-            HELP_MARKER("Bypasses all the requirements to trigger an event such as is tunable enabled, number of players, time of day, etc. Use with caution.")			
+            HELP_MARKER("Bypasses all the requirements to trigger an event such as is tunable enabled, number of players, time of day, etc. Use with caution.")
 
             disable_all_events, on_tick = ImGui.Checkbox("Disable All Events", disable_all_events)
             HELP_MARKER("Prevents all the events from being triggered.")

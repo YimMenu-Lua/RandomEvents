@@ -5,8 +5,9 @@ local RE = {
 	GSBD_RE		    = 1882037,
 	GPBD_FM_2	    = 1882422,
 	FMRE_DATA	    = 15544,
-	RETURN_TRUE	    = 29788,  -- func_144  - 0x745C
-	RETURN_FALSE	= 504300, -- func_1034 - 0x7B1EC
+	RETURN_TRUE	    = 29788,  -- func_144, freemode  - 0x745C
+	RETURN_FALSE	= 504300, -- func_1034, freemode - 0x7B1EC
+	PA_COORDS 		= 2150150, -- func_7800, fm_content_possessed_animals - 0x20CF06
     VECTOR_ZERO     = vec3:new(0.0, 0.0, 0.0),
 	MAX_LOCATIONS	= { 29, 8, 9, 49, 7, 0, 25, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 8, 0 },
 	BLIP_RANGES	    = { 200.0, nil, 200.0, nil, nil, nil, nil, 400.0, nil, nil, 200.0, 200.0, 200.0, 100.0, nil, nil, 200.0, nil, nil, nil },	
@@ -39,26 +40,26 @@ local RE = {
 		CLEANUP   = 3
 	},
 	FUNC_HASHES = {
-		2767956, -- func_8742 - 0x2A3C54
-		2767720, -- func_8737 - 0x2A3B68
-		2767675, -- func_8735 - 0x2A3B3B
-		2767613, -- func_8733 - 0x2A3AFD
-		2764516, -- func_8726 - 0x2A2EE4
-		2763652, -- func_8718 - 0x2A2B84 -- Should be available check
-		2763420, -- func_8714 - 0x2A2A9C
-		2763350, -- func_8713 - 0x2A2A56
-		2762838, -- func_8707 - 0x2A2856
-		2762747, -- func_8704 - 0x2A27FB
-		2762669, -- func_8702 - 0x2A27AD
-		2762594, -- func_8700 - 0x2A2762
-		2762516, -- func_8698 - 0x2A2714
-		2762438, -- func_8696 - 0x2A26C6
-		2761589, -- func_8686 - 0x2A2375 -- Should be available check
-		2761461, -- func_8683 - 0x2A22F5
-		2761371, -- func_8680 - 0x2A229B
-		2760882, -- func_8671 - 0x2A20B2
-		2760044, -- func_8668 - 0x2A1D6C
-		2759990  -- func_8667 - 0x2A1D36 -- Should be available check	
+		2767956, -- func_8742, freemode - 0x2A3C54
+		2767720, -- func_8737, freemode - 0x2A3B68
+		2767675, -- func_8735, freemode - 0x2A3B3B
+		2767613, -- func_8733, freemode - 0x2A3AFD
+		2764516, -- func_8726, freemode - 0x2A2EE4
+		2763652, -- func_8718, freemode - 0x2A2B84 -- Should be available check
+		2763420, -- func_8714, freemode - 0x2A2A9C
+		2763350, -- func_8713, freemode - 0x2A2A56
+		2762838, -- func_8707, freemode - 0x2A2856
+		2762747, -- func_8704, freemode - 0x2A27FB
+		2762669, -- func_8702, freemode - 0x2A27AD
+		2762594, -- func_8700, freemode - 0x2A2762
+		2762516, -- func_8698, freemode - 0x2A2714
+		2762438, -- func_8696, freemode - 0x2A26C6
+		2761589, -- func_8686, freemode - 0x2A2375 -- Should be available check
+		2761461, -- func_8683, freemode - 0x2A22F5
+		2761371, -- func_8680, freemode - 0x2A229B
+		2760882, -- func_8671, freemode - 0x2A20B2
+		2760044, -- func_8668, freemode - 0x2A1D6C
+		2759990  -- func_8667, freemode - 0x2A1D36 -- Should be available check	
 	},
 	END_REASONS = {
 		{ 1733, 115 },
@@ -359,6 +360,13 @@ local function IS_EVENT_EXCEPTION(event)
     return event == RE.INSTANCES.PHANTOM_CAR or event == RE.INSTANCES.SIGHTSEEING or event == RE.INSTANCES.XMAS_MUGGER or event == RE.INSTANCES.GHOSTHUNT
 end
 
+-- The original function 'func_7842()' returns a null vector, resulting in the script event not updating the value of Global_1882037.f_1[event /*15*/].f_10]. To fix this issue, I replace the value of local pointer with the actual function that returns the coordinates of the animal.
+function PATCH_POSSESSED_ANIMALS_COORDINATES()
+	if SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat(RE.SCRIPTS[RE.INSTANCES.POSSESSED_ANIMALS + 1])) ~= 0 then
+		locals.set_int(RE.SCRIPTS[RE.INSTANCES.POSSESSED_ANIMALS + 1], 399 + 100, RE.PA_COORDS)
+	end
+end
+
 local function CLAMP(value, min, max)
     return math.min(math.max(value, min), max)
 end
@@ -498,8 +506,8 @@ end)
 script.register_looped("Random Events", function()
     LOOPED_UPDATE_RE_INFO()
 
-    if re_initialized then
-        if enable_esp then
+    if re_initialized then		
+		if enable_esp then
             LOOPED_RENDER_ESP()
         end
 		
@@ -522,6 +530,8 @@ script.register_looped("Random Events", function()
         if enable_notifications then
             LOOPED_NOTIFY_PLAYER()
         end
+		
+		PATCH_POSSESSED_ANIMALS_COORDINATES()
     end
 end)
 

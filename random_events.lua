@@ -7,8 +7,7 @@ local RE = {
 		GPBD_FM_2	    = 1882422,
 		FMRE_DATA	    = 15544,
 		VECTOR_ZERO     = vec3:new(0.0, 0.0, 0.0),
-		MAX_LOCATIONS	= { 29, 8, 9, 0, 7, 0, 0, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 9, 0 },
-		BLIP_RANGES	    = { 200.0, nil, 200.0, nil, nil, nil, nil, 400.0, nil, nil, 200.0, 200.0, 200.0, 100.0, nil, nil, 200.0, nil, nil, nil },
+		MAX_LOCATIONS	= { 29, 8, 9, 0, 7, 0, 0, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 9, 0 }
 	},
 	IDS = {
 		DRUG_VEHICLE	  = 0,
@@ -215,7 +214,7 @@ local set_cooldown         = 1800000
 local set_availability     = 900000
 local enable_esp           = true
 local enable_line          = true
-local enable_spheres       = true
+local enable_sphere        = true
 local enable_notifications = true
 local force_freemode_host  = true
 local apply_in_minutes     = false
@@ -229,7 +228,6 @@ local is_tunable_active    = {}
 
 local event_coords           = RE.CORE.VECTOR_ZERO
 local event_state            = RE.STATES.INACTIVE
-local event_blip_range       = RE.CORE.BLIP_RANGES[selected_event + 1]
 local event_trigger_range    = 0.0
 local event_timer            = 0
 local event_variation        = 0
@@ -514,7 +512,6 @@ local function LOOPED_UPDATE_RE_INFO()
     event_host_id 		   = NETWORK.NETWORK_GET_HOST_OF_SCRIPT(RE.SCRIPTS[selected_event + 1], selected_event, 0)
 	event_host_name 	   = PLAYER.GET_PLAYER_NAME(event_host_id)
     max_active_events      = tunables.get_int("FMREMAXACTIVATEDEVENTS")
-    event_blip_range       = RE.CORE.BLIP_RANGES[selected_event + 1]
 end
 
 local function LOOPED_RENDER_ESP()
@@ -525,7 +522,6 @@ local function LOOPED_RENDER_ESP()
 		local availability  = GET_EVENT_AVAILABILITY(i)
 		local time_left		= GET_EVENT_TIME_LEFT(availability, timer)
 		local trigger_range = GET_EVENT_TRIGGER_RANGE(i)
-		local blip_range 	= RE.CORE.BLIP_RANGES[i + 1]
 
 		if state ~= RE.STATES.INACTIVE and coords ~= RE.CORE.VECTOR_ZERO then
 			local distance           = MISC.GET_DISTANCE_BETWEEN_COORDS(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, false)
@@ -552,11 +548,8 @@ local function LOOPED_RENDER_ESP()
 			HUD.SET_TEXT_COLOUR(255, 255, 255, 240)
 			HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_coords_x, screen_coords_y - 0.03, 0)
 
-			if enable_spheres then
+			if enable_sphere then
 				GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, 0, 153, 51, 40, true, true, 2, false, nil, nil, false)
-				if blip_range ~= nil then
-					GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, blip_range, blip_range, blip_range, 93, 182, 229, 40, true, true, 2, false, nil, nil, false)
-				end
 			end
 		end
 	end
@@ -794,9 +787,6 @@ re_tab:add_imgui(function()
         ImGui.Text("Trigger Range: " .. (event_state >= RE.STATES.AVAILABLE and math.floor(event_trigger_range) .. " meters" or "N/A"))
         HELP_MARKER("Shows the distance required to trigger the event when available.")
 
-        ImGui.Text("Blip Range: " .. ((event_state >= RE.STATES.AVAILABLE and event_blip_range ~= nil) and math.floor(event_blip_range) .. " meters" or "N/A"))
-        HELP_MARKER("Shows the distance for the blip to appear when approaching the event (if applicable).")
-
         ImGui.Text("Cooldown: "  .. math.floor(event_cooldown / 60000) .. " minutes")
         HELP_MARKER("Shows the duration that the event will be in the inactive state.")
 
@@ -839,7 +829,7 @@ re_tab:add_imgui(function()
 			enable_esp = ImGui.Checkbox("ESP", enable_esp)
 			if enable_esp then
 				ImGui.SameLine()
-				enable_spheres = ImGui.Checkbox("Spheres", enable_spheres)
+				enable_sphere = ImGui.Checkbox("Sphere", enable_sphere)
 				ImGui.SameLine()
 				enable_line = ImGui.Checkbox("Line", enable_line)
 			end

@@ -1,5 +1,5 @@
 # RandomEvents
 A Lua script for YimMenu about Random Events.
 
-![RandomEvents](https://i.imgur.com/uatEyWE.png)
-![ESP](https://i.imgur.com/epdyWAz.png)
+![RandomEvents](https://i.imgur.com/2tltX33.png)
+![ESP]([https://i.imgur.com/zypojSW.png)

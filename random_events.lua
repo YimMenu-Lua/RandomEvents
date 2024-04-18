@@ -244,8 +244,8 @@ local availability_time_left = "00:00:00"
 local event_host_name 		 = "**Invalid**"
 local target_players         = {}
 
-function IS_SCRIPT_ACTIVE(script_name)
-	return SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat(script_name)) ~= 0
+local function IS_SCRIPT_ACTIVE(script_name)
+	return SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat(script_name)) > 0
 end
 
 local function CLAMP(value, min, max)
@@ -304,7 +304,7 @@ local function RESTORE_SHOULD_TRIGGER_FUNCTIONS()
 end
 
 -- The original functions return a null vector, resulting in the script event not updating the value of Global_1882037.f_1[event /*15*/].f_10. To fix this issue, I replace the value of local pointers with the actual functions that return the coordinates of the event.
-function PATCH_EVENT_COORDS()
+local function PATCH_EVENT_COORDS()
 	-- The game crashes on session change if I set the values in a loop when script is not active for some reason.
 	if IS_SCRIPT_ACTIVE("fm_content_slasher") then
 		locals.set_int("fm_content_slasher", 403 + 100, RE.FUNC_HOOKS.REAL_COORDS[1])
@@ -326,7 +326,7 @@ function PATCH_EVENT_COORDS()
 	end
 end
 
-function RESET_UPDATE_EVENT_COORDS_DELAY()
+local function RESET_UPDATE_EVENT_COORDS_DELAY()
 	for i = 0, max_num_re - 1 do
 		if IS_SCRIPT_ACTIVE(RE.SCRIPTS[i + 1]) then
 			local base_address = RE.LOCALS.COORD_DELAYS[i + 1][1]
@@ -361,7 +361,7 @@ local function SET_EVENT_END_REASON(event, reason)
 	locals.set_int(RE.SCRIPTS[event], base_address + offset, reason)
 end
 
-function SET_EVENT_TUNABLES(toggle)
+local function SET_EVENT_TUNABLES(toggle)
 	tunables.set_int("STANDARDCONTROLLERVOLUME", toggle and 1 or -1)
 	tunables.set_int("STANDARDTARGETTINGTIME", toggle and 1 or -1)
 	tunables.set_int("SSP2POSIX", toggle and NETWORK.GET_CLOUD_TIME_AS_INT() or -1) -- Make the posix match with the seed (it will get stuck on day 1, though).
@@ -374,7 +374,7 @@ function SET_EVENT_TUNABLES(toggle)
 	tunables.set_bool(2093114948, toggle) -- Happy Holidays Hauler
 end
 
-function CHECK_EVENT_TUNABLES()
+local function CHECK_EVENT_TUNABLES()
 	is_tunable_active[RE.IDS.DRUG_VEHICLE + 1]  	= tunables.get_bool("SUM_RANDOM_EVENT_DRUG_VEHICLE_ENABLE")
 	is_tunable_active[RE.IDS.MOVIE_PROPS + 1]  		= tunables.get_bool("COLLECTABLES_MOVIE_PROPS")
 	is_tunable_active[RE.IDS.GOLDEN_GUN + 1]  		= true -- Sleeping Guard (no tunable)
@@ -515,7 +515,11 @@ local function LOOPED_UPDATE_RE_INFO()
 end
 
 local function LOOPED_RENDER_ESP()
-    for i = 0, max_num_re - 1 do
+    if IS_SCRIPT_ACTIVE("appinternet") then
+		return
+	end
+	
+	for i = 0, max_num_re - 1 do
 		local state 		= GET_EVENT_STATE(i)
 		local coords 		= GET_EVENT_COORDS(i)
 		local timer 		= GET_EVENT_TIMER(i)
@@ -549,7 +553,7 @@ local function LOOPED_RENDER_ESP()
 			HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_coords_x, screen_coords_y - 0.03, 0)
 
 			if enable_sphere then
-				GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, 0, 153, 51, 40, true, true, 2, false, nil, nil, false)
+				GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, 93, 182, 229, 40, true, true, 2, false, nil, nil, false)
 			end
 		end
 	end

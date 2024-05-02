@@ -525,7 +525,8 @@ local function LOOPED_RENDER_ESP()
 		local timer 		= GET_EVENT_TIMER(i)
 		local availability  = GET_EVENT_AVAILABILITY(i)
 		local time_left		= GET_EVENT_TIME_LEFT(availability, timer)
-		local trigger_range = GET_EVENT_TRIGGER_RANGE(i)
+		local trigger_range = GET_EVENT_TRIGGER_RANGE(i)	
+		local colors        = state == RE.STATES.ACTIVE and { 0, 153, 51 } or { 93, 182, 229 }
 
 		if state ~= RE.STATES.INACTIVE and coords ~= RE.CORE.VECTOR_ZERO then
 			local distance           = MISC.GET_DISTANCE_BETWEEN_COORDS(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, false)
@@ -538,7 +539,7 @@ local function LOOPED_RENDER_ESP()
 			_, screen_coords_x, screen_coords_y = GRAPHICS.GET_SCREEN_COORD_FROM_WORLD_COORD(coords.x, coords.y, coords.z, screen_coords_x, screen_coords_y)
 
 			if enable_line then
-				GRAPHICS.DRAW_LINE(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, 93, 182, 229, 255)
+				GRAPHICS.DRAW_LINE(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, colors[1], colors[2], colors[3], 255)
 			end
 
 			HUD.BEGIN_TEXT_COMMAND_DISPLAY_TEXT("STRING")
@@ -553,7 +554,7 @@ local function LOOPED_RENDER_ESP()
 			HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_coords_x, screen_coords_y - 0.03, 0)
 
 			if enable_sphere then
-				GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, 93, 182, 229, 40, true, true, 2, false, nil, nil, false)
+				GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, colors[1], colors[2], colors[3], 40, true, true, 2, false, nil, nil, false)
 			end
 		end
 	end
@@ -646,257 +647,253 @@ script.register_looped("Random Events", function()
 end)
 
 re_tab:add_imgui(function()
-    if re_initialized then
-        if ImGui.BeginCombo("Select Event", RE.NAMES[selected_event + 1]) then
-            for i = 1, #RE.NAMES do
-                local is_selected = (i - 1 == selected_event)
-                local state 	  = GET_EVENT_STATE(i - 1)
-
-                if state == RE.STATES.INACTIVE then
-                    ImGui.PushStyleColor(ImGuiCol.Text, 1, 0, 0, 1)
-                elseif state == RE.STATES.AVAILABLE then
-                    ImGui.PushStyleColor(ImGuiCol.Text, 1, 1, 1, 1)
-                elseif state == RE.STATES.ACTIVE then
-                    ImGui.PushStyleColor(ImGuiCol.Text, 0, 1, 0, 1)
-                end
-
-                if ImGui.Selectable(RE.NAMES[i], is_selected) then
-                    selected_event = i - 1
-					COMBO_CLEANUP()
-                end
-
-                if is_selected then
-                    ImGui.SetItemDefaultFocus()
-                end
-
-                ImGui.PopStyleColor()
-            end
-            ImGui.EndCombo()
-        end
-
-        if set_target_player and (selected_event == RE.IDS.PHANTOM_CAR or selected_event == RE.IDS.XMAS_MUGGER) then
-            selected_target = CLAMP(selected_target, 0, #target_players - 1)
-
-            if ImGui.BeginCombo("Select Target", target_players[selected_target + 1].name) then
-                for i, player in ipairs(target_players) do
-                    local is_selected = (i - 1 == selected_target)
-
-                    if ImGui.Selectable(player.name .. " (ID: " .. player.id ..")", is_selected) then
-                        selected_target  = i - 1
-                        target_player_id = player.id
-                    end
-
-                    if is_selected then
-                        ImGui.SetItemDefaultFocus()
-                    end
-                end
-                ImGui.EndCombo()
-            end
-        end
-
-        selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. RE.CORE.MAX_LOCATIONS[selected_event + 1] .. ")", selected_loc)
-
-		if on_modified then
-			selected_loc = CLAMP(selected_loc, 0, RE.CORE.MAX_LOCATIONS[selected_event + 1])
+    if not re_initialized then
+        ImGui.Text("Random Events are not initialized.")
+		return
+    end
+	
+	if ImGui.BeginCombo("Select Event", RE.NAMES[selected_event + 1]) then
+		for i = 1, #RE.NAMES do
+			local is_selected = (i - 1 == selected_event)
+			local state 	  = GET_EVENT_STATE(i - 1)
+	
+			if state == RE.STATES.INACTIVE then
+				ImGui.PushStyleColor(ImGuiCol.Text, 1, 0, 0, 1)
+			elseif state == RE.STATES.AVAILABLE then
+				ImGui.PushStyleColor(ImGuiCol.Text, 1, 1, 1, 1)
+			elseif state == RE.STATES.ACTIVE then
+				ImGui.PushStyleColor(ImGuiCol.Text, 0, 1, 0, 1)
+			end
+	
+			if ImGui.Selectable(RE.NAMES[i], is_selected) then
+				selected_event = i - 1
+				COMBO_CLEANUP()
+			end
+	
+			if is_selected then
+				ImGui.SetItemDefaultFocus()
+			end
+	
+			ImGui.PopStyleColor()
 		end
-
-        if num_active_events >= max_active_events then
-            ImGui.TextColored(1, 0, 0, 1, "Active Events: " .. num_active_events .. "/" .. max_active_events)
-        else
-            ImGui.Text("Active Events: " .. num_active_events .. "/" .. max_active_events)
-        end
-        HELP_MARKER("Shows the current number of active events (locally) out of the maximum allowed.")
-
-        if ImGui.Button("Launch Event") then
-            script.run_in_fiber(function(script)
-                if event_state ~= RE.STATES.ACTIVE then
-                    REQUEST_RANDOM_EVENT(selected_event, selected_loc)
-                    script:sleep(500)
-                    if event_state == RE.STATES.INACTIVE and event_variation ~= selected_loc then
-                        gui.show_error("Random Events", "Failed to launch event. Are you freemode host?")
-                    end
-                else
-                    gui.show_error("Random Events", "Event is already active.")
-                end
-            end)
-        end
-
-        ImGui.SameLine()
-
-		if ImGui.Button("Kill Event") then
-			if event_state == RE.STATES.AVAILABLE then
-				SET_EVENT_STATE(selected_event, RE.STATES.CLEANUP)
-			elseif event_state == RE.STATES.ACTIVE then
-				if event_host_id == self.get_id() then
-					SET_EVENT_END_REASON(selected_event + 1, 3)
+		ImGui.EndCombo()
+	end
+	
+	selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. RE.CORE.MAX_LOCATIONS[selected_event + 1] .. ")", selected_loc)
+	
+	if on_modified then
+		selected_loc = CLAMP(selected_loc, 0, RE.CORE.MAX_LOCATIONS[selected_event + 1])
+	end
+	
+	if num_active_events >= max_active_events then
+		ImGui.TextColored(1, 0, 0, 1, "Active Events: " .. num_active_events .. "/" .. max_active_events)
+	else
+		ImGui.Text("Active Events: " .. num_active_events .. "/" .. max_active_events)
+	end
+	HELP_MARKER("Shows the current number of active events (locally) out of the maximum allowed.")
+	
+	if ImGui.Button("Launch Event") then
+		script.run_in_fiber(function(script)
+			if event_state ~= RE.STATES.ACTIVE then
+				REQUEST_RANDOM_EVENT(selected_event, selected_loc)
+				script:sleep(500)
+				if event_state == RE.STATES.INACTIVE and event_variation ~= selected_loc then
+					gui.show_error("Random Events", "Failed to launch event. Are you freemode host?")
+				end
+			else
+				gui.show_error("Random Events", "Event is already active.")
+			end
+		end)
+	end
+	
+	ImGui.SameLine()
+	
+	if ImGui.Button("Kill Event") then
+		if event_state == RE.STATES.AVAILABLE then
+			SET_EVENT_STATE(selected_event, RE.STATES.CLEANUP)
+		elseif event_state == RE.STATES.ACTIVE then
+			if event_host_id == self.get_id() then
+				SET_EVENT_END_REASON(selected_event + 1, 3)
+			else
+				gui.show_error("Random Events", "Failed to kill event. You must be event host.")
+			end
+		else
+			gui.show_error("Random Events", "Event is not active.")
+		end
+	end
+	
+	ImGui.SameLine()
+	
+	if ImGui.Button("Teleport to Event") then
+		script.run_in_fiber(function()
+			if event_state >= RE.STATES.AVAILABLE then
+				if event_coords ~= RE.CORE.VECTOR_ZERO then
+					PED.SET_PED_COORDS_KEEP_VEHICLE(self.get_ped(), event_coords.x, event_coords.y, event_coords.z)
 				else
-					gui.show_error("Random Events", "Failed to kill event. You must be event host.")
+					gui.show_error("Random Events", "Failed to teleport to event. Wait for coordinates to be updated.")
 				end
 			else
 				gui.show_error("Random Events", "Event is not active.")
 			end
-		end
-
-        ImGui.SameLine()
-
-		if ImGui.Button("Teleport to Event") then
-			script.run_in_fiber(function()
-				if event_state >= RE.STATES.AVAILABLE then
-					if event_coords ~= RE.CORE.VECTOR_ZERO then
-						PED.SET_PED_COORDS_KEEP_VEHICLE(self.get_ped(), event_coords.x, event_coords.y, event_coords.z)
+		end)
+	end
+	
+	ImGui.Separator()
+	
+	ImGui.Text("State: " ..
+		(event_state == RE.STATES.INACTIVE and "Inactive - launching in " .. cooldown_time_left or
+		event_state == RE.STATES.AVAILABLE and "Available - deactivating in " .. availability_time_left or
+		event_state == RE.STATES.ACTIVE and "Active" or
+		event_state == RE.STATES.CLEANUP and "Cleanup" or
+		"None"))
+	HELP_MARKER("Shows the current state of the event.\n- Inactive\n- Available\n- Active\n- Cleanup")
+	
+	if event_state == RE.STATES.ACTIVE then
+		ImGui.Text("Host: " .. event_host_name)
+	
+		ImGui.SameLine()
+	
+		if event_host_id ~= self.get_id() then
+			if ImGui.SmallButton("Take Control") then
+				script.run_in_fiber(function()
+					if IS_SCRIPT_ACTIVE(RE.SCRIPTS[selected_event + 1]) then
+						network.force_script_host(RE.SCRIPTS[selected_event + 1])
 					else
-						gui.show_error("Random Events", "Failed to teleport to event. Wait for coordinates to be updated.")
+						gui.show_error("Random Events", "Event script is not active. Are you a participant?")
 					end
-				else
-					gui.show_error("Random Events", "Event is not active.")
+				end)
+			end
+		else
+			ImGui.BeginDisabled()
+			ImGui.SmallButton("Take Control")
+			ImGui.EndDisabled()
+		end
+	end
+	
+	ImGui.Text("Location: " .. (event_variation ~= -1 and event_variation or "N/A"))
+	HELP_MARKER("Shows the current location of the event.")
+	
+	ImGui.Text("Trigger Range: " .. (event_state >= RE.STATES.AVAILABLE and math.floor(event_trigger_range) .. " meters" or "N/A"))
+	HELP_MARKER("Shows the distance required to trigger the event when available.")
+	
+	ImGui.Text("Cooldown: "  .. math.floor(event_cooldown / 60000) .. " minutes")
+	HELP_MARKER("Shows the duration that the event will be in the inactive state.")
+	
+	ImGui.Text("Availability: " .. math.floor(event_availability / 60000) .. " minutes")
+	HELP_MARKER("Shows the duration that the event will be in the available state.")
+	
+	ImGui.Separator()
+	
+	if ImGui.CollapsingHeader("Cooldown & Availability Editor") then
+		set_cooldown = ImGui.InputInt("Cooldown##cooldown", set_cooldown)
+	
+		if ImGui.Button("Apply##apply_cooldown") then
+			script.run_in_fiber(function(script)
+				local value = apply_in_minutes and (set_cooldown * 60000) or set_cooldown
+				SET_EVENT_COOLDOWN(selected_event, value)
+				script:sleep(500)
+				if event_cooldown ~= value then
+					gui.show_error("Random Events", "Failed to set event cooldown. Are you freemode host?")
 				end
 			end)
 		end
-
-        ImGui.Separator()
-
-        ImGui.Text("State: " ..
-			(event_state == RE.STATES.INACTIVE and "Inactive - launching in " .. cooldown_time_left or
-			event_state == RE.STATES.AVAILABLE and "Available - deactivating in " .. availability_time_left or
-			event_state == RE.STATES.ACTIVE and "Active" or
-			event_state == RE.STATES.CLEANUP and "Cleanup" or
-			"None"))
-        HELP_MARKER("Shows the current state of the event.\n- Inactive\n- Available\n- Active\n- Cleanup")
-
-		if event_state == RE.STATES.ACTIVE then
-			ImGui.Text("Host: " .. event_host_name)
-
-			ImGui.SameLine()
-
-			if event_host_id ~= self.get_id() then
-				if ImGui.SmallButton("Take Control") then
-					script.run_in_fiber(function()
-						if IS_SCRIPT_ACTIVE(RE.SCRIPTS[selected_event + 1]) then
-							network.force_script_host(RE.SCRIPTS[selected_event + 1])
-						else
-							gui.show_error("Random Events", "Event script is not active. Are you a participant?")
-						end
-					end)
+	
+		set_availability = ImGui.InputInt("Availability##availability", set_availability)
+	
+		if ImGui.Button("Apply##apply_availability") then
+			script.run_in_fiber(function(script)
+				local value = apply_in_minutes and (set_availability * 60000) or set_availability
+				SET_EVENT_AVAILABILITY(selected_event, value)
+				script:sleep(500)
+				if event_availability ~= value then
+					gui.show_error("Random Events", "Failed to set event availability. Are you freemode host?")
 				end
-			else
-				ImGui.BeginDisabled()
-				ImGui.SmallButton("Take Control")
-				ImGui.EndDisabled()
+			end)
+		end
+	
+		apply_in_minutes = ImGui.Checkbox("Apply in Minutes", apply_in_minutes)
+	end
+	
+	if ImGui.CollapsingHeader("Settings") then
+		enable_esp = ImGui.Checkbox("ESP", enable_esp)
+		if enable_esp then
+			ImGui.SameLine()
+			enable_sphere = ImGui.Checkbox("Sphere", enable_sphere)
+			ImGui.SameLine()
+			enable_line = ImGui.Checkbox("Line", enable_line)
+		end
+	
+		ImGui.Separator()
+	
+		set_target_player, on_tick = ImGui.Checkbox("Set Target Player", set_target_player)
+		HELP_MARKER("Allows you to set the target of Phantom Car and Gooch.")
+	
+		if on_tick then
+			if not set_target_player then
+				SET_EVENT_TARGET(-1)
 			end
 		end
-
-        ImGui.Text("Location: " .. (event_variation ~= -1 and event_variation or "N/A"))
-        HELP_MARKER("Shows the current location of the event.")
-
-        ImGui.Text("Trigger Range: " .. (event_state >= RE.STATES.AVAILABLE and math.floor(event_trigger_range) .. " meters" or "N/A"))
-        HELP_MARKER("Shows the distance required to trigger the event when available.")
-
-        ImGui.Text("Cooldown: "  .. math.floor(event_cooldown / 60000) .. " minutes")
-        HELP_MARKER("Shows the duration that the event will be in the inactive state.")
-
-        ImGui.Text("Availability: " .. math.floor(event_availability / 60000) .. " minutes")
-        HELP_MARKER("Shows the duration that the event will be in the available state.")
-
-        ImGui.Separator()
-
-        if ImGui.CollapsingHeader("Cooldown & Availability Editor") then
-            set_cooldown = ImGui.InputInt("Cooldown##cooldown", set_cooldown)
-
-            if ImGui.Button("Apply##apply_cooldown") then
-                script.run_in_fiber(function(script)
-					local value = apply_in_minutes and (set_cooldown * 60000) or set_cooldown
-					SET_EVENT_COOLDOWN(selected_event, value)
-					script:sleep(500)
-					if event_cooldown ~= value then
-						gui.show_error("Random Events", "Failed to set event cooldown. Are you freemode host?")
+		
+		if set_target_player then
+			selected_target = CLAMP(selected_target, 0, #target_players - 1)
+		
+			if ImGui.BeginCombo("Select Target", target_players[selected_target + 1].name) then
+				for i, player in ipairs(target_players) do
+					local is_selected = (i - 1 == selected_target)
+		
+					if ImGui.Selectable(player.name .. " (ID: " .. player.id ..")", is_selected) then
+						selected_target  = i - 1
+						target_player_id = player.id
 					end
-				end)
-            end
-
-            set_availability = ImGui.InputInt("Availability##availability", set_availability)
-
-            if ImGui.Button("Apply##apply_availability") then
-                script.run_in_fiber(function(script)
-					local value = apply_in_minutes and (set_availability * 60000) or set_availability
-					SET_EVENT_AVAILABILITY(selected_event, value)
-					script:sleep(500)
-					if event_availability ~= value then
-						gui.show_error("Random Events", "Failed to set event availability. Are you freemode host?")
-					end
-				end)
-            end
-
-            apply_in_minutes = ImGui.Checkbox("Apply in Minutes", apply_in_minutes)
-        end
-
-        if ImGui.CollapsingHeader("Settings") then
-			enable_esp = ImGui.Checkbox("ESP", enable_esp)
-			if enable_esp then
-				ImGui.SameLine()
-				enable_sphere = ImGui.Checkbox("Sphere", enable_sphere)
-				ImGui.SameLine()
-				enable_line = ImGui.Checkbox("Line", enable_line)
-			end
-
-            ImGui.Separator()
-
-            if selected_event == RE.IDS.PHANTOM_CAR or selected_event == RE.IDS.XMAS_MUGGER then
-                set_target_player, on_tick = ImGui.Checkbox("Set Target Player", set_target_player)
-
-				if on_tick then
-					if not set_target_player then
-						SET_EVENT_TARGET(-1)
+		
+					if is_selected then
+						ImGui.SetItemDefaultFocus()
 					end
 				end
-            else
-                set_target_player = false
-                ImGui.BeginDisabled()
-                ImGui.Checkbox("Set Target Player", set_target_player)
-                ImGui.EndDisabled()
-            end
-            HELP_MARKER("Allows you to set the target of Phantom Car and Gooch.")
-
-			enable_tunables, on_tick = ImGui.Checkbox("Enable Tunables", enable_tunables)
-			HELP_MARKER("Enables the tunables of special events such as Cerberus, Sightseeing, etc.")
-
+				ImGui.EndCombo()
+			end
+			
+			ImGui.Separator()
+		end
+	
+		enable_tunables, on_tick = ImGui.Checkbox("Enable Tunables", enable_tunables)
+		HELP_MARKER("Enables the tunables of special events such as Cerberus, Sightseeing, etc.")
+	
+		if on_tick then
+			if not enable_tunables then
+				SET_EVENT_TUNABLES(false)
+			end
+		end
+	
+		if not disable_all_events then
+			bypass_requirements, on_tick = ImGui.Checkbox("Bypass Requirements", bypass_requirements)
+	
 			if on_tick then
-				if not enable_tunables then
-					SET_EVENT_TUNABLES(false)
+				if not bypass_requirements then
+					RESTORE_SHOULD_TRIGGER_FUNCTIONS()
 				end
 			end
-
-            if not disable_all_events then
-                bypass_requirements, on_tick = ImGui.Checkbox("Bypass Requirements", bypass_requirements)
-
-                if on_tick then
-                    if not bypass_requirements then
-                        RESTORE_SHOULD_TRIGGER_FUNCTIONS()
-                    end
-                end
-            else
-                bypass_requirements = false
-                ImGui.BeginDisabled()
-                ImGui.Checkbox("Bypass Requirements", bypass_requirements)
-                ImGui.EndDisabled()
-            end
-            HELP_MARKER("Bypasses all the requirements to trigger an event such as is tunable enabled, number of players, time of day, etc. Use with caution.")
-
-            disable_all_events, on_tick = ImGui.Checkbox("Disable All Events", disable_all_events)
-            HELP_MARKER("Prevents all the events from being triggered.")
-
-            if on_tick then
-                if not disable_all_events then
-                    RESTORE_SHOULD_TRIGGER_FUNCTIONS()
-                end
-            end
-
-            enable_notifications = ImGui.Checkbox("Notifications", enable_notifications)
-            HELP_MARKER("Notifies you whenever an event is available or active.")
-
-			force_freemode_host = ImGui.Checkbox("Force Freemode Host", force_freemode_host)
-			HELP_MARKER("Forces you to always become freemode host. It is required for script to work correctly.")
-        end
-    else
-        ImGui.Text("Random Events aren't initialized yet.")
-    end
+		else
+			bypass_requirements = false
+			ImGui.BeginDisabled()
+			ImGui.Checkbox("Bypass Requirements", bypass_requirements)
+			ImGui.EndDisabled()
+		end
+		HELP_MARKER("Bypasses all the requirements to trigger an event such as is tunable enabled, number of players, time of day, etc. Use with caution.")
+	
+		disable_all_events, on_tick = ImGui.Checkbox("Disable All Events", disable_all_events)
+		HELP_MARKER("Prevents all the events from being triggered.")
+	
+		if on_tick then
+			if not disable_all_events then
+				RESTORE_SHOULD_TRIGGER_FUNCTIONS()
+			end
+		end
+	
+		enable_notifications = ImGui.Checkbox("Notifications", enable_notifications)
+		HELP_MARKER("Notifies you whenever an event is available or active.")
+	
+		force_freemode_host = ImGui.Checkbox("Force Freemode Host", force_freemode_host)
+		HELP_MARKER("Forces you to always become freemode host. It is required for script to work correctly.")
+	end	
 end)

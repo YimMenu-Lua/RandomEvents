@@ -426,19 +426,19 @@ local function GET_EVENT_COORDS(event)
 end
 
 local function GET_EVENT_TRIGGER_RANGE(event)
-	return globals.get_float(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)) + 13)
+    return globals.get_float(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)) + 13)
 end
 
 local function GET_EVENT_TIMER(event)
-	return globals.get_int(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)) + 1)
+    return globals.get_int(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)) + 1)
 end
 
 local function GET_EVENT_COOLDOWN(event)
-	return locals.get_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 6)
+    return locals.get_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 6)
 end
 
 local function GET_EVENT_AVAILABILITY(event)
-	return locals.get_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 7)
+    return locals.get_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 7)
 end
 
 local function GET_NUM_LOCALLY_ACTIVE_EVENTS()

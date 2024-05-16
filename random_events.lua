@@ -222,6 +222,7 @@ local set_target_player    = false
 local enable_tunables      = false
 local bypass_requirements  = false
 local disable_all_events   = false
+local logging              = false
 local notified_available   = {}
 local notified_active      = {}
 local is_tunable_active    = {}
@@ -445,7 +446,9 @@ local function GET_NUM_LOCALLY_ACTIVE_EVENTS()
     local num_events = 0
     
     for i = 0, max_num_re - 1 do
-        if GET_PLAYER_STATE(i, self.get_id()) ~= RE.STATES.INACTIVE then
+        local local_state = GET_PLAYER_STATE(i, self.get_id())
+        
+        if local_state ~= RE.STATES.INACTIVE then
             num_events = num_events + 1
         end
     end
@@ -455,7 +458,9 @@ end
 
 local function GET_TRIGGERER_INDEX(event)
     for i = 0, 31 do
-        if GET_PLAYER_STATE(event, i) == RE.STATES.ACTIVE then
+        local player_state = GET_PLAYER_STATE(event, i)
+        
+        if player_state == RE.STATES.ACTIVE then
             return i
         end
     end
@@ -515,7 +520,13 @@ local function LOOPED_UPDATE_RE_INFO()
 end
 
 local function LOOPED_RENDER_ESP()
-    if IS_SCRIPT_ACTIVE("appinternet") then
+    if IS_SCRIPT_ACTIVE("appinternet") or
+    HUD.IS_PAUSE_MENU_ACTIVE() or
+    NETWORK.NETWORK_IS_IN_MP_CUTSCENE() or not
+    CAM.IS_GAMEPLAY_CAM_RENDERING() or
+    HUD.IS_HUD_COMPONENT_ACTIVE(16) or -- HUD_RADIO_STATIONS
+    HUD.IS_HUD_COMPONENT_ACTIVE(19) or -- HUD_WEAPON_WHEEL
+    globals.get_int(23572 + 4) == 1 then -- is selector UI rendering
         return
     end
     
@@ -572,6 +583,7 @@ local function LOOPED_NOTIFY_PLAYER()
                     local triggerer_name = PLAYER.GET_PLAYER_NAME(triggerer_index)
                 
                     gui.show_message("Random Events", "" .. RE.NAMES[i + 1] .. " is triggered by " .. triggerer_name .. ".")
+                    if logging then log.info("" .. RE.NAMES[i + 1] .. " is triggered by " .. triggerer_name .. ".") end
                     notified_active[i] = true
                 end
             end
@@ -581,8 +593,10 @@ local function LOOPED_NOTIFY_PLAYER()
             if not notified_available[i] then
             	if is_tunable_active[i + 1] then
                     gui.show_message("Random Events", "" .. RE.NAMES[i + 1] .. " is available.")
+                    if logging then log.info("" .. RE.NAMES[i + 1] .. " is available.") end
             	else
                     gui.show_warning("Random Events", "" .. RE.NAMES[i + 1] .. " is available.\nWarning: Tunable is not active.")
+                    if logging then log.warning("" .. RE.NAMES[i + 1] .. " is available (tunable is not active).") end
             	end
             	notified_available[i] = true
             end
@@ -891,7 +905,13 @@ re_tab:add_imgui(function()
         end
         
         enable_notifications = ImGui.Checkbox("Notifications", enable_notifications)
-        HELP_MARKER("Notifies you whenever an event is available or active.")
+        HELP_MARKER("Notifies you whenever an event is available or triggered.")        
+        if enable_notifications then
+            ImGui.SameLine()           
+            logging = ImGui.Checkbox("Also Log", logging)
+        else
+            logging = false
+        end
         
         force_freemode_host = ImGui.Checkbox("Force Freemode Host", force_freemode_host)
         HELP_MARKER("Forces you to always become freemode host. It is required for script to work correctly.")

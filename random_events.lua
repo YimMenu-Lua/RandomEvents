@@ -564,7 +564,7 @@ local function LOOPED_RENDER_ESP()
             HUD.SET_TEXT_COLOUR(255, 255, 255, 240)
             HUD.END_TEXT_COMMAND_DISPLAY_TEXT(screen_x, screen_y - 0.03, 0)
             
-            if enable_sphere then
+            if enable_sphere and state ~= RE.STATES.ACTIVE then
             	GRAPHICS.DRAW_MARKER(28, coords.x, coords.y, coords.z, 0, 0, 0, 0, 180, 0, trigger_range, trigger_range, trigger_range, colors[1], colors[2], colors[3], 40, true, true, 2, false, nil, nil, false)
             end
     	end

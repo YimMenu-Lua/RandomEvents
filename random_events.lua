@@ -3,9 +3,9 @@ local re_tab = gui.get_tab("GUI_TAB_NETWORK"):add_tab("Random Events")
 local RE = {
     CORE = {
     	REQUEST_RE_HASH = -126218586,
-    	GSBD_RE         = 1882037,
-    	GPBD_FM_2       = 1882422,
-    	FMRE_DATA       = 15544,
+    	GSBD_RE         = 1882247,
+    	GPBD_FM_2       = 1882632,
+    	FMRE_DATA       = 15727,
     	VECTOR_ZERO     = vec3:new(0.0, 0.0, 0.0),
     	MAX_LOCATIONS   = { 29, 8, 9, 0, 7, 0, 0, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 9, 0 }
     },
@@ -39,82 +39,81 @@ local RE = {
     },
     LOCALS = {
         END_REASONS = {
-            { 1733, 115 },
-            { 1859, 137 },
-            { 1730, 93  },
-            { 1539, 83  },
+            { 1762, 115 },
+            { 1888, 137 },
+            { 1762, 93  },
             { 1568, 83  },
-            { 1548, 83  },
-            { 1790, 84  },
-            { 2170, 213 },
-            { 1560, 91  },
-            { 1807, 178 },
-            { 1916, 151 },
-            { 1778, 93  },
-            { 2704, 437 },
-            { 1694, 87  },
-            { 1591, 83  },
-            { 2175, 221 },
-            { 1868, 113 },
-            { 1564, 83  },
-            { 1522, 88  },
-            { 1432, 91  }
+            { 1597, 83  },
+            { 1577, 83  },
+            { 1822, 84  },
+            { 2051, 130 },
+            { 1589, 91  },
+            { 1838, 178 },
+            { 1948, 151 },
+            { 1810, 93  },
+            { 2736, 437 },
+            { 1732, 87  },
+            { 1620, 83  },
+            { 2209, 221 },
+            { 1902, 113 },
+            { 1593, 83  },
+            { 1552, 88  },
+            { 1461, 91  }
         },
         COORD_DELAYS = {
-            { 1733, 145 },
-            { 1859, 167 },
-            { 1730, 127 },
-            { 1539, 113 },
+            { 1762, 145 },
+            { 1888, 167 },
+            { 1762, 127 },
             { 1568, 113 },
-            { 1548, 113 },
-            { 1790, 114 },
-            { 2170, 248 },
-            { 1560, 121 },
-            { 1807, 208 },
-            { 1916, 185 },
-            { 1778, 128 },
-            { 2704, 469 },
-            { 1694, 123 },
-            { 1591, 113 },
-            { 2175, 255 },
-            { 1868, 147 },
-            { 1564, 113 },
-            { 1522, 118 },
-            { 1432, 121 }
+            { 1597, 113 },
+            { 1577, 113 },
+            { 1822, 114 },
+            { 2051, 165 },
+            { 1589, 121 },
+            { 1838, 208 },
+            { 1948, 185 },
+            { 1810, 128 },
+            { 2736, 469 },
+            { 1732, 123 },
+            { 1620, 113 },
+            { 2209, 255 },
+            { 1902, 147 },
+            { 1593, 113 },
+            { 1552, 118 },
+            { 1461, 121 }
         }
     },
     FUNC_HOOKS = {
-        FM_RETURN_TRUE  = 29788,  -- func_144 - 0x745C, freemode
-        FM_RETURN_FALSE = 504300, -- func_1034 - 0x7B1EC, freemode
+        FM_RETURN_TRUE  = 30201,  -- func_148 - 0x75F9, freemode
+        FM_RETURN_FALSE = 509992, -- func_1046 - 0x7C828, freemode
         SHOULD_TRIGGER = {
-            2767956, -- func_8742 - 0x2A3C54, freemode
-            2767720, -- func_8737 - 0x2A3B68, freemode
-            2767675, -- func_8735 - 0x2A3B3B, freemode
-            2767613, -- func_8733 - 0x2A3AFD, freemode
-            2764516, -- func_8726 - 0x2A2EE4, freemode
-            2763652, -- func_8718 - 0x2A2B84, freemode (should be available check)
-            2763420, -- func_8714 - 0x2A2A9C, freemode
-            2763350, -- func_8713 - 0x2A2A56, freemode
-            2762838, -- func_8707 - 0x2A2856, freemode
-            2762747, -- func_8704 - 0x2A27FB, freemode
-            2762669, -- func_8702 - 0x2A27AD, freemode
-            2762594, -- func_8700 - 0x2A2762, freemode
-            2762516, -- func_8698 - 0x2A2714, freemode
-            2762438, -- func_8696 - 0x2A26C6, freemode
-            2761589, -- func_8686 - 0x2A2375, freemode (should be available check)
-            2761461, -- func_8683 - 0x2A22F5, freemode
-            2761371, -- func_8680 - 0x2A229B, freemode
-            2760882, -- func_8671 - 0x2A20B2, freemode
-            2760044, -- func_8668 - 0x2A1D6C, freemode
-            2759990  -- func_8667 - 0x2A1D36, freemode (should be available check)
+            2821944, -- func_8947 - 0x2B0F38, freemode
+            2821708, -- func_8942 - 0x2B0E4C, freemode
+            2821663, -- func_8940 - 0x2B0E1F, freemode
+            2821601, -- func_8938 - 0x2B0DE1, freemode
+            2818504, -- func_8931 - 0x2B01C8, freemode
+            2817639, -- func_8923 - 0x2AFE67, freemode (should be available check)
+            2817413, -- func_8919 - 0x2AFD85, freemode
+            2817346, -- func_8918 - 0x2AFD42, freemode
+            2816651, -- func_8912 - 0x2AFA8B, freemode
+            2816563, -- func_8909 - 0x2AFA33, freemode
+            2816488, -- func_8907 - 0x2AF9E8, freemode
+            2816413, -- func_8905 - 0x2AF99D, freemode
+            2816335, -- func_8903 - 0x2AF94F, freemode
+            2816257, -- func_8901 - 0x2AF901, freemode
+            2815408, -- func_8891 - 0x2AF5B0, freemode (should be available check)
+            2815280, -- func_8888 - 0x2AF530, freemode
+            2815190, -- func_8885 - 0x2AF4D6, freemode
+            2814701, -- func_8876 - 0x2AF2ED, freemode
+            2813825, -- func_8873 - 0x2AEF81, freemode
+            2813771, -- func_8872 - 0x2AEF4B, freemode (should be available check)
         },
         REAL_COORDS = {
-            2147715, -- func_7792 - 0x20C583, fm_content_slasher
-            2149112, -- func_7784 - 0x20CAF8, fm_content_phantom_car
-            1881702, -- func_5988 - 0x1CB666, fm_content_sightseeing (returns the closest UFO's coords, aka the one closer than 300f)
-            2165541, -- func_7802 - 0x210B25, fm_content_cerberus
-            2152762, -- func_7810 - 0x20D93A, fm_content_xmas_mugger
-            2150150  -- func_7800 - 0x20CF06, fm_content_possessed_animals
+            2191925, -- func_8005 - 0x217235, fm_content_slasher
+            2192466, -- func_7997 - 0x217452, fm_content_phantom_car
+            2208960, -- func_8015 - 0x21B4C0, fm_content_cerberus
+            2195406, -- func_8023 - 0x217FCE, fm_content_xmas_mugger
+            2194258  -- func_8013 - 0x217B52, fm_content_possessed_animals
         }
     },
     SCRIPTS = {
@@ -156,7 +155,7 @@ local RE = {
         "XM22_RE_ROBBERY_INACTIVE_TIME",
         "STANDARD_KEYBIND_COOLDOWN",
         "XM22_RE_BANK_SHOOTOUT_INACTIVE_TIME",
-        296417, -- Global_262145.f_34272 - Armored Truck (doesn't have a tunable)
+        295362, -- Global_262145.f_33217 - Armored Truck (doesn't have a tunable)
         "STANDARDCONTROLLERVOLUME_COOLDOWN",
         "SUM23_RE_GHOSTHUNT_INACTIVE_TIME",
         "XMAS_TRUCK_INACTIVE_TIME"
@@ -178,7 +177,7 @@ local RE = {
         "XM22_RE_ROBBERY_AVAILABLE_TIME",
         "STANDARD_KEYBIND_AVAILABILITY",
         "XM22_RE_BANK_SHOOTOUT_AVAILABLE_TIME",
-        296418, -- Global_262145.f_34273 - Armored Truck (doesn't have a tunable)
+        295363, -- Global_262145.f_33218 - Armored Truck (doesn't have a tunable)
         "STANDARDCONTROLLERVOLUME_AVAILABILITY",
         "SUM23_RE_GHOSTHUNT_AVAILABLE_TIME",
         "XMAS_TRUCK_AVAILABLE_TIME"
@@ -308,22 +307,19 @@ end
 local function PATCH_EVENT_COORDS()
     -- The game crashes on session change if I set the values in a loop when script is not active for some reason.
     if IS_SCRIPT_ACTIVE("fm_content_slasher") then
-        locals.set_int("fm_content_slasher", 403 + 100, RE.FUNC_HOOKS.REAL_COORDS[1])
+        locals.set_int("fm_content_slasher", 405 + 105, RE.FUNC_HOOKS.REAL_COORDS[1])
     end
     if IS_SCRIPT_ACTIVE("fm_content_phantom_car") then
-    	locals.set_int("fm_content_phantom_car", 386 + 100, RE.FUNC_HOOKS.REAL_COORDS[2])
-    end
-    if IS_SCRIPT_ACTIVE("fm_content_sightseeing") then
-    	locals.set_int("fm_content_sightseeing", 484 + 100, RE.FUNC_HOOKS.REAL_COORDS[3])
+    	locals.set_int("fm_content_phantom_car", 388 + 105, RE.FUNC_HOOKS.REAL_COORDS[2])
     end
     if IS_SCRIPT_ACTIVE("fm_content_cerberus") then
-    	locals.set_int("fm_content_cerberus", 401 + 100, RE.FUNC_HOOKS.REAL_COORDS[4])
+    	locals.set_int("fm_content_cerberus", 403 + 105, RE.FUNC_HOOKS.REAL_COORDS[4])
     end
     if IS_SCRIPT_ACTIVE("fm_content_xmas_mugger") then
-    	locals.set_int("fm_content_xmas_mugger", 415 + 100, RE.FUNC_HOOKS.REAL_COORDS[5])
+    	locals.set_int("fm_content_xmas_mugger", 417 + 105, RE.FUNC_HOOKS.REAL_COORDS[5])
     end
     if IS_SCRIPT_ACTIVE("fm_content_possessed_animals") then
-    	locals.set_int("fm_content_possessed_animals", 399 + 100, RE.FUNC_HOOKS.REAL_COORDS[6])
+    	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_HOOKS.REAL_COORDS[6])
     end
 end
 
@@ -399,7 +395,7 @@ local function CHECK_EVENT_TUNABLES()
 end
 
 local function ARE_EVENTS_INITIALIZED()
-    return globals.get_int(RE.CORE.GPBD_FM_2 + (1 + (self.get_id() * 142)) + 78) == 1
+    return globals.get_int(RE.CORE.GPBD_FM_2 + (1 + (self.get_id() * 146)) + 82) == 1
 end
 
 local function GET_MAX_NUMBER_OF_EVENTS()
@@ -407,7 +403,7 @@ local function GET_MAX_NUMBER_OF_EVENTS()
 end
 
 local function GET_PLAYER_STATE(event, player_id)
-    return globals.get_int(RE.CORE.GPBD_FM_2 + (1 + (player_id * 142)) + 78 + 1 + (1 + (event * 3)))
+    return globals.get_int(RE.CORE.GPBD_FM_2 + (1 + (player_id * 146)) + 82 + 1 + (1 + (event * 3)))
 end
 
 local function GET_EVENT_STATE(event)
@@ -420,7 +416,7 @@ end
 
 local function GET_EVENT_COORDS(event)
     if event == RE.IDS.GHOSTHUNT then
-    	return locals.get_vec3(RE.SCRIPTS[RE.IDS.GHOSTHUNT + 1], 230 + 85 + 1 + (1 + (0 * 12)) + 4)
+    	return locals.get_vec3(RE.SCRIPTS[RE.IDS.GHOSTHUNT + 1], 232 + 85 + 1 + (1 + (0 * 12)) + 4)
     else
     	return globals.get_vec3(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)) + 10)
     end
@@ -526,7 +522,7 @@ local function LOOPED_RENDER_ESP()
     CAM.IS_GAMEPLAY_CAM_RENDERING() or
     HUD.IS_HUD_COMPONENT_ACTIVE(16) or -- HUD_RADIO_STATIONS
     HUD.IS_HUD_COMPONENT_ACTIVE(19) or -- HUD_WEAPON_WHEEL
-    globals.get_int(23572 + 4) == 1 then -- is selector UI rendering
+    globals.get_int(23692 + 4) == 1 then -- is selector UI rendering
         return
     end
     

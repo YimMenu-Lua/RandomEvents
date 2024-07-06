@@ -313,13 +313,13 @@ local function PATCH_EVENT_COORDS()
     	locals.set_int("fm_content_phantom_car", 388 + 105, RE.FUNC_HOOKS.REAL_COORDS[2])
     end
     if IS_SCRIPT_ACTIVE("fm_content_cerberus") then
-    	locals.set_int("fm_content_cerberus", 403 + 105, RE.FUNC_HOOKS.REAL_COORDS[4])
+    	locals.set_int("fm_content_cerberus", 403 + 105, RE.FUNC_HOOKS.REAL_COORDS[3])
     end
     if IS_SCRIPT_ACTIVE("fm_content_xmas_mugger") then
-    	locals.set_int("fm_content_xmas_mugger", 417 + 105, RE.FUNC_HOOKS.REAL_COORDS[5])
+    	locals.set_int("fm_content_xmas_mugger", 417 + 105, RE.FUNC_HOOKS.REAL_COORDS[4])
     end
     if IS_SCRIPT_ACTIVE("fm_content_possessed_animals") then
-    	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_HOOKS.REAL_COORDS[6])
+    	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_HOOKS.REAL_COORDS[5])
     end
 end
 
@@ -362,12 +362,12 @@ local function SET_SPECIAL_EVENT_TUNABLES(toggle)
     tunables.set_int("STANDARDCONTROLLERVOLUME", toggle and 1 or -1)
     tunables.set_int("STANDARDTARGETTINGTIME", toggle and 1 or -1)
     tunables.set_int("SSP2POSIX", toggle and NETWORK.GET_CLOUD_TIME_AS_INT() or -1) -- Make the posix match with the seed (it will get stuck on day 1, though).
-    tunables.set_bool("ENABLE_SU22_SMUGGLER_TRAIL", toggle)
     tunables.set_int("NC_SOURCE_TRUCK_HEAD_COUNT", toggle and 3 or 1)
     tunables.set_int("STANDARD_KEYBIND_SELECTION", toggle and 1 or -1)
     tunables.set_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022", toggle)
     tunables.set_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL", toggle)
     tunables.set_bool("ENABLE_HALLOWEEN_GHOSTHUNT", toggle)
+    tunables.set_bool(-818123201, toggle) -- This will invalidate ENABLE_HALLOWEEN_GHOSTHUNT
     tunables.set_bool(2093114948, toggle)
 end
 
@@ -390,7 +390,7 @@ local function CHECK_EVENT_TUNABLES()
     is_tunable_active[RE.IDS.BANK_SHOOTOUT + 1]     = tunables.get_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022")
     is_tunable_active[RE.IDS.ARMOURED_TRUCK + 1]    = tunables.get_bool("ENABLE_RANDOM_EVENT_ARMORED_TRUCK")
     is_tunable_active[RE.IDS.POSSESSED_ANIMALS + 1] = tunables.get_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL")
-    is_tunable_active[RE.IDS.GHOSTHUNT + 1]         = tunables.get_bool("ENABLE_HALLOWEEN_GHOSTHUNT")
+    is_tunable_active[RE.IDS.GHOSTHUNT + 1]         = tunables.get_bool("ENABLE_HALLOWEEN_GHOSTHUNT") or tunables.get_bool(-818123201)
     is_tunable_active[RE.IDS.XMAS_TRUCK + 1]        = tunables.get_bool(2093114948)
 end
 

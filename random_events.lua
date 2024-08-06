@@ -6,8 +6,7 @@ local RE = {
     	GSBD_RE         = 1882247,
     	GPBD_FM_2       = 1882632,
     	FMRE_DATA       = 15727,
-    	VECTOR_ZERO     = vec3:new(0.0, 0.0, 0.0),
-    	MAX_LOCATIONS   = { 29, 8, 9, 0, 7, 0, 0, 14, 11, 4, 9, 9, 6, 24, 0, 0, 9, 17, 9, 0 }
+    	VECTOR_ZERO     = vec3:new(0.0, 0.0, 0.0)
     },
     IDS = {
     	DRUG_VEHICLE      = 0,
@@ -239,14 +238,12 @@ local num_active_events      = 0
 local event_host_id          = 0
 local target_player_id       = 0
 local re_initialized         = false
+local variations_registered  = false
 local cooldown_time_left     = "00:00:00"
 local availability_time_left = "00:00:00"
 local event_host_name        = "**Invalid**"
+local max_variations         = {}
 local target_players         = {}
-
-local function IS_SCRIPT_ACTIVE(script_name)
-    return SCRIPT.GET_NUMBER_OF_THREADS_RUNNING_THE_SCRIPT_WITH_THIS_HASH(joaat(script_name)) > 0
-end
 
 local function CLAMP(value, min, max)
     return math.min(math.max(value, min), max)
@@ -272,6 +269,26 @@ local function HELP_MARKER(text)
         ImGui.TextUnformatted(text)
         ImGui.PopTextWrapPos()
         ImGui.EndTooltip()
+    end
+end
+
+local function REGISTER_MAX_VARIATIONS()
+    if max_variations_registered then
+        return
+    end
+    
+    if script.is_active("freemode") and re_initialized then
+        for i = 0, max_num_re - 1 do
+            local fmmc_type     = locals.get_int("freemode", RE.CORE.FMRE_DATA + 241 + 1 + (i + 1))
+            local max_variation = scr_function.call_script_function("freemode", "GMFV", "2D 02 04 00 00 38 00 55 ? ? 00", "int", {
+                { "int", fmmc_type },
+                { "int", 0 }
+            })
+            
+            max_variations[i + 1] = max_variation - 1
+        end
+        
+        max_variations_registered = true
     end
 end
 
@@ -306,26 +323,26 @@ end
 -- The original functions return a null vector, resulting in the script event not updating the value of Global_1882037.f_1[event /*15*/].f_10. To fix this issue, I replace the value of local pointers with the actual functions that return the coordinates of the event.
 local function PATCH_EVENT_COORDS()
     -- The game crashes on session change if I set the values in a loop when script is not active for some reason.
-    if IS_SCRIPT_ACTIVE("fm_content_slasher") then
+    if script.is_active("fm_content_slasher") then
         locals.set_int("fm_content_slasher", 405 + 105, RE.FUNC_HOOKS.REAL_COORDS[1])
     end
-    if IS_SCRIPT_ACTIVE("fm_content_phantom_car") then
+    if script.is_active("fm_content_phantom_car") then
     	locals.set_int("fm_content_phantom_car", 388 + 105, RE.FUNC_HOOKS.REAL_COORDS[2])
     end
-    if IS_SCRIPT_ACTIVE("fm_content_cerberus") then
+    if script.is_active("fm_content_cerberus") then
     	locals.set_int("fm_content_cerberus", 403 + 105, RE.FUNC_HOOKS.REAL_COORDS[3])
     end
-    if IS_SCRIPT_ACTIVE("fm_content_xmas_mugger") then
+    if script.is_active("fm_content_xmas_mugger") then
     	locals.set_int("fm_content_xmas_mugger", 417 + 105, RE.FUNC_HOOKS.REAL_COORDS[4])
     end
-    if IS_SCRIPT_ACTIVE("fm_content_possessed_animals") then
+    if script.is_active("fm_content_possessed_animals") then
     	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_HOOKS.REAL_COORDS[5])
     end
 end
 
 local function RESET_UPDATE_EVENT_COORDS_DELAY()
     for i = 0, max_num_re - 1 do
-        if IS_SCRIPT_ACTIVE(RE.SCRIPTS[i + 1]) then
+        if script.is_active(RE.SCRIPTS[i + 1]) then
             local base_address = RE.LOCALS.COORD_DELAYS[i + 1][1]
             local offset       = RE.LOCALS.COORD_DELAYS[i + 1][2]
             
@@ -516,7 +533,7 @@ local function LOOPED_UPDATE_RE_INFO()
 end
 
 local function LOOPED_RENDER_ESP()
-    if IS_SCRIPT_ACTIVE("appinternet") or
+    if script.is_active("appinternet") or
     HUD.IS_PAUSE_MENU_ACTIVE() or
     NETWORK.NETWORK_IS_IN_MP_CUTSCENE() or not
     CAM.IS_GAMEPLAY_CAM_RENDERING() or
@@ -620,6 +637,7 @@ end)
 
 script.register_looped("Random Events", function()
     LOOPED_UPDATE_RE_INFO()
+    REGISTER_MAX_VARIATIONS()
 
     if re_initialized then
     	if enable_esp then
@@ -689,10 +707,10 @@ re_tab:add_imgui(function()
         ImGui.EndCombo()
     end
 	
-    selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. RE.CORE.MAX_LOCATIONS[selected_event + 1] .. ")", selected_loc)
+    selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. max_variations[selected_event + 1] .. ")", selected_loc)
     
     if on_modified then
-    	selected_loc = CLAMP(selected_loc, 0, RE.CORE.MAX_LOCATIONS[selected_event + 1])
+    	selected_loc = CLAMP(selected_loc, 0, max_variations[selected_event + 1])
     end
     
     if num_active_events >= max_active_events then
@@ -766,7 +784,7 @@ re_tab:add_imgui(function()
         if event_host_id ~= self.get_id() then
             if ImGui.SmallButton("Take Control") then
                 script.run_in_fiber(function()
-                    if IS_SCRIPT_ACTIVE(RE.SCRIPTS[selected_event + 1]) then
+                    if script.is_active(RE.SCRIPTS[selected_event + 1]) then
                     	network.force_script_host(RE.SCRIPTS[selected_event + 1])
                     else
                     	gui.show_error("Random Events", "Event script is not active. Are you a participant?")

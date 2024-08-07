@@ -273,14 +273,14 @@ local function HELP_MARKER(text)
 end
 
 local function REGISTER_MAX_VARIATIONS()
-    if max_variations_registered then
+    if variations_registered then
         return
     end
     
     if script.is_active("freemode") and re_initialized then
         for i = 0, max_num_re - 1 do
             local fmmc_type     = locals.get_int("freemode", RE.CORE.FMRE_DATA + 241 + 1 + (i + 1))
-            local max_variation = scr_function.call_script_function("freemode", "GMFV", "2D 02 04 00 00 38 00 55 ? ? 00", "int", {
+            local max_variation = scr_function.call_script_function("freemode", "GMFV", "2D 02 04 00 00 38 00 55", "int", {
                 { "int", fmmc_type },
                 { "int", 0 }
             })
@@ -288,7 +288,7 @@ local function REGISTER_MAX_VARIATIONS()
             max_variations[i + 1] = max_variation - 1
         end
         
-        max_variations_registered = true
+        variations_registered = true
     end
 end
 

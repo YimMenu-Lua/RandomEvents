@@ -6,7 +6,7 @@ local RE = {
     	GSBD_RE         = 1882247,
     	GPBD_FM_2       = 1882632,
     	FMRE_DATA       = 15727,
-    	VECTOR_ZERO     = vec3:new(0.0, 0.0, 0.0)
+    	VECTOR_ZERO     = vec3:new(0, 0, 0)
     },
     IDS = {
     	DRUG_VEHICLE      = 0,
@@ -38,170 +38,170 @@ local RE = {
     },
     LOCALS = {
         END_REASONS = {
-            { 1762, 115 },
-            { 1888, 137 },
-            { 1762, 93  },
-            { 1568, 83  },
-            { 1597, 83  },
-            { 1577, 83  },
-            { 1822, 84  },
-            { 2051, 130 },
-            { 1589, 91  },
-            { 1838, 178 },
-            { 1948, 151 },
-            { 1810, 93  },
-            { 2736, 437 },
-            { 1732, 87  },
-            { 1620, 83  },
-            { 2209, 221 },
-            { 1902, 113 },
-            { 1593, 83  },
-            { 1552, 88  },
-            { 1461, 91  }
+            [0]  = { 1762, 115 },
+            [1]  = { 1888, 137 },
+            [2]  = { 1762, 93  },
+            [3]  = { 1568, 83  },
+            [4]  = { 1597, 83  },
+            [5]  = { 1577, 83  },
+            [6]  = { 1822, 84  },
+            [7]  = { 2051, 130 },
+            [8]  = { 1589, 91  },
+            [9]  = { 1838, 178 },
+            [10] = { 1948, 151 },
+            [11] = { 1810, 93  },
+            [12] = { 2736, 437 },
+            [13] = { 1732, 87  },
+            [14] = { 1620, 83  },
+            [15] = { 2209, 221 },
+            [16] = { 1902, 113 },
+            [17] = { 1593, 83  },
+            [18] = { 1552, 88  },
+            [19] = { 1461, 91  }
         },
         COORD_DELAYS = {
-            { 1762, 145 },
-            { 1888, 167 },
-            { 1762, 127 },
-            { 1568, 113 },
-            { 1597, 113 },
-            { 1577, 113 },
-            { 1822, 114 },
-            { 2051, 165 },
-            { 1589, 121 },
-            { 1838, 208 },
-            { 1948, 185 },
-            { 1810, 128 },
-            { 2736, 469 },
-            { 1732, 123 },
-            { 1620, 113 },
-            { 2209, 255 },
-            { 1902, 147 },
-            { 1593, 113 },
-            { 1552, 118 },
-            { 1461, 121 }
+            [0]  = { 1762, 145 },
+            [1]  = { 1888, 167 },
+            [2]  = { 1762, 127 },
+            [3]  = { 1568, 113 },
+            [4]  = { 1597, 113 },
+            [5]  = { 1577, 113 },
+            [6]  = { 1822, 114 },
+            [7]  = { 2051, 165 },
+            [8]  = { 1589, 121 },
+            [9]  = { 1838, 208 },
+            [10] = { 1948, 185 },
+            [11] = { 1810, 128 },
+            [12] = { 2736, 469 },
+            [13] = { 1732, 123 },
+            [14] = { 1620, 113 },
+            [15] = { 2209, 255 },
+            [16] = { 1902, 147 },
+            [17] = { 1593, 113 },
+            [18] = { 1552, 118 },
+            [19] = { 1461, 121 }
         }
     },
     FUNC_HOOKS = {
-        FM_RETURN_TRUE  = 30201,  -- func_148 - 0x75F9, freemode
-        FM_RETURN_FALSE = 509992, -- func_1046 - 0x7C828, freemode
+        FM_RETURN_TRUE  = 0x75F9,
+        FM_RETURN_FALSE = 0x7C828,
         SHOULD_TRIGGER = {
-            2821944, -- func_8947 - 0x2B0F38, freemode
-            2821708, -- func_8942 - 0x2B0E4C, freemode
-            2821663, -- func_8940 - 0x2B0E1F, freemode
-            2821601, -- func_8938 - 0x2B0DE1, freemode
-            2818504, -- func_8931 - 0x2B01C8, freemode
-            2817639, -- func_8923 - 0x2AFE67, freemode (should be available check)
-            2817413, -- func_8919 - 0x2AFD85, freemode
-            2817346, -- func_8918 - 0x2AFD42, freemode
-            2816651, -- func_8912 - 0x2AFA8B, freemode
-            2816563, -- func_8909 - 0x2AFA33, freemode
-            2816488, -- func_8907 - 0x2AF9E8, freemode
-            2816413, -- func_8905 - 0x2AF99D, freemode
-            2816335, -- func_8903 - 0x2AF94F, freemode
-            2816257, -- func_8901 - 0x2AF901, freemode
-            2815408, -- func_8891 - 0x2AF5B0, freemode (should be available check)
-            2815280, -- func_8888 - 0x2AF530, freemode
-            2815190, -- func_8885 - 0x2AF4D6, freemode
-            2814701, -- func_8876 - 0x2AF2ED, freemode
-            2813825, -- func_8873 - 0x2AEF81, freemode
-            2813771, -- func_8872 - 0x2AEF4B, freemode (should be available check)
+            [0]  = 0x2B0F38,
+            [1]  = 0x2B0E4C,
+            [2]  = 0x2B0E1F,
+            [3]  = 0x2B0DE1,
+            [4]  = 0x2B01C8,
+            [5]  = 0x2AFE67, -- should be available check (should trigger has no checks and just returns true)
+            [6]  = 0x2AFD85,
+            [7]  = 0x2AFD42,
+            [8]  = 0x2AFA8B,
+            [9]  = 0x2AFA33,
+            [10] = 0x2AF9E8,
+            [11] = 0x2AF99D,
+            [12] = 0x2AF94F,
+            [13] = 0x2AF901,
+            [14] = 0x2AF5B0, -- should be available check (should trigger has no checks and just returns true)
+            [15] = 0x2AF530,
+            [16] = 0x2AF4D6,
+            [17] = 0x2AF2ED,
+            [18] = 0x2AEF81,
+            [19] = 0x2AEF4B, -- should be available check (should trigger has no checks and just returns true)
         },
         REAL_COORDS = {
-            2191925, -- func_8005 - 0x217235, fm_content_slasher
-            2192466, -- func_7997 - 0x217452, fm_content_phantom_car
-            2208960, -- func_8015 - 0x21B4C0, fm_content_cerberus
-            2195406, -- func_8023 - 0x217FCE, fm_content_xmas_mugger
-            2194258  -- func_8013 - 0x217B52, fm_content_possessed_animals
+            [0] = 0x217235, -- Slashers
+            [1] = 0x217452, -- Phantom Car
+            [2] = 0x21B4C0, -- Cerberus
+            [3] = 0x217FCE, -- Gooch
+            [4] = 0x217B52  -- Possessed Animals
         }
     },
     SCRIPTS = {
-        "fm_content_drug_vehicle",
-        "fm_content_movie_props",
-        "fm_content_golden_gun",
-        "fm_content_vehicle_list",
-        "fm_content_slasher",
-        "fm_content_phantom_car",
-        "fm_content_sightseeing",
-        "fm_content_smuggler_trail",
-        "fm_content_cerberus",
-        "fm_content_smuggler_plane",
-        "fm_content_crime_scene",
-        "fm_content_metal_detector",
-        "fm_content_convoy",
-        "fm_content_robbery",
-        "fm_content_xmas_mugger",
-        "fm_content_bank_shootout",
-        "fm_content_armoured_truck",
-        "fm_content_possessed_animals",
-        "fm_content_ghosthunt",
-        "fm_content_xmas_truck"
+        [0]  = "fm_content_drug_vehicle",
+        [1]  = "fm_content_movie_props",
+        [2]  = "fm_content_golden_gun",
+        [3]  = "fm_content_vehicle_list",
+        [4]  = "fm_content_slasher",
+        [5]  = "fm_content_phantom_car",
+        [6]  = "fm_content_sightseeing",
+        [7]  = "fm_content_smuggler_trail",
+        [8]  = "fm_content_cerberus",
+        [9]  = "fm_content_smuggler_plane",
+        [10] = "fm_content_crime_scene",
+        [11] = "fm_content_metal_detector",
+        [12] = "fm_content_convoy",
+        [13] = "fm_content_robbery",
+        [14] = "fm_content_xmas_mugger",
+        [15] = "fm_content_bank_shootout",
+        [16] = "fm_content_armoured_truck",
+        [17] = "fm_content_possessed_animals",
+        [18] = "fm_content_ghosthunt",
+        [19] = "fm_content_xmas_truck"
     },
     COOLDOWNS = {
-        "SUM22_RE_DRUG_VEHICLE_INACTIVE_TIME",
-        "SUM22_RE_MOVIE_PROPS_INACTIVE_TIME",
-        "SUM22_RE_GOLDEN_GUN_INACTIVE_TIME",
-        "SUM22_RE_VEHICLE_LIST_INACTIVE_TIME",
-        "STANDARDCONTROLLERVOLUME_COOLDOWN",
-        "STANDARDTARGETTINGTIME_COOLDOWN",
-        "SSP2_COOLDOWN",
-        "SUM22_RE_SMUGGLER_TRAIL_INACTIVE_TIME",
-        "NC_SOURCE_TRUCK_COOLDOWN",
-        "SUM22_RE_SMUGGLER_PLANE_INACTIVE_TIME",
-        "SUM22_RE_CRIME_SCENE_INACTIVE_TIME",
-        "SUM22_RE_METAL_DETECTOR_INACTIVE_TIME",
-        "XM22_RE_GANG_CONVOY_INACTIVE_TIME",
-        "XM22_RE_ROBBERY_INACTIVE_TIME",
-        "STANDARD_KEYBIND_COOLDOWN",
-        "XM22_RE_BANK_SHOOTOUT_INACTIVE_TIME",
-        295362, -- Global_262145.f_33217 - Armored Truck (doesn't have a tunable)
-        "STANDARDCONTROLLERVOLUME_COOLDOWN",
-        "SUM23_RE_GHOSTHUNT_INACTIVE_TIME",
-        "XMAS_TRUCK_INACTIVE_TIME"
+        [0]  = "SUM22_RE_DRUG_VEHICLE_INACTIVE_TIME",
+        [1]  = "SUM22_RE_MOVIE_PROPS_INACTIVE_TIME",
+        [2]  = "SUM22_RE_GOLDEN_GUN_INACTIVE_TIME",
+        [3]  = "SUM22_RE_VEHICLE_LIST_INACTIVE_TIME",
+        [4]  = "STANDARDCONTROLLERVOLUME_COOLDOWN",
+        [5]  = "STANDARDTARGETTINGTIME_COOLDOWN",
+        [6]  = "SSP2_COOLDOWN",
+        [7]  = "SUM22_RE_SMUGGLER_TRAIL_INACTIVE_TIME",
+        [8]  = "NC_SOURCE_TRUCK_COOLDOWN",
+        [9]  = "SUM22_RE_SMUGGLER_PLANE_INACTIVE_TIME",
+        [10] = "SUM22_RE_CRIME_SCENE_INACTIVE_TIME",
+        [11] = "SUM22_RE_METAL_DETECTOR_INACTIVE_TIME",
+        [12] = "XM22_RE_GANG_CONVOY_INACTIVE_TIME",
+        [13] = "XM22_RE_ROBBERY_INACTIVE_TIME",
+        [14] = "STANDARD_KEYBIND_COOLDOWN",
+        [15] = "XM22_RE_BANK_SHOOTOUT_INACTIVE_TIME",
+        [16] = 295362, -- Global_262145.f_33217 - Armored Truck (doesn't have a tunable)
+        [17] = "STANDARDCONTROLLERVOLUME_COOLDOWN",
+        [18] = "SUM23_RE_GHOSTHUNT_INACTIVE_TIME",
+        [19] = "XMAS_TRUCK_INACTIVE_TIME"
     },
     AVAILABILITIES = {
-        "SUM22_RE_DRUG_VEHICLE_AVAILABLE_TIME",
-        "SUM22_RE_MOVIE_PROPS_AVAILABLE_TIME",
-        "SUM22_RE_GOLDEN_GUN_AVAILABLE_TIME",
-        "SUM22_RE_VEHICLE_LIST_AVAILABLE_TIME",
-        "STANDARDCONTROLLERVOLUME_AVAILABILITY",
-        "STANDARDTARGETTINGTIME_AVAILABILITY",
-        "SSP2_AVAILABILITY",
-        "SUM22_RE_SMUGGLER_TRAIL_AVAILABLE_TIME",
-        "NC_SOURCE_TRUCK_AVAILABILITY",
-        "SUM22_RE_SMUGGLER_PLANE_AVAILABLE_TIME",
-        "SUM22_RE_CRIME_SCENE_AVAILABLE_TIME",
-        "SUM22_RE_METAL_DETECTOR_AVAILABLE_TIME",
-        "XM22_RE_GANG_CONVOY_AVAILABLE_TIME",
-        "XM22_RE_ROBBERY_AVAILABLE_TIME",
-        "STANDARD_KEYBIND_AVAILABILITY",
-        "XM22_RE_BANK_SHOOTOUT_AVAILABLE_TIME",
-        295363, -- Global_262145.f_33218 - Armored Truck (doesn't have a tunable)
-        "STANDARDCONTROLLERVOLUME_AVAILABILITY",
-        "SUM23_RE_GHOSTHUNT_AVAILABLE_TIME",
-        "XMAS_TRUCK_AVAILABLE_TIME"
+        [0]  = "SUM22_RE_DRUG_VEHICLE_AVAILABLE_TIME",
+        [1]  = "SUM22_RE_MOVIE_PROPS_AVAILABLE_TIME",
+        [2]  = "SUM22_RE_GOLDEN_GUN_AVAILABLE_TIME",
+        [3]  = "SUM22_RE_VEHICLE_LIST_AVAILABLE_TIME",
+        [4]  = "STANDARDCONTROLLERVOLUME_AVAILABILITY",
+        [5]  = "STANDARDTARGETTINGTIME_AVAILABILITY",
+        [6]  = "SSP2_AVAILABILITY",
+        [7]  = "SUM22_RE_SMUGGLER_TRAIL_AVAILABLE_TIME",
+        [8]  = "NC_SOURCE_TRUCK_AVAILABILITY",
+        [9]  = "SUM22_RE_SMUGGLER_PLANE_AVAILABLE_TIME",
+        [10] = "SUM22_RE_CRIME_SCENE_AVAILABLE_TIME",
+        [11] = "SUM22_RE_METAL_DETECTOR_AVAILABLE_TIME",
+        [12] = "XM22_RE_GANG_CONVOY_AVAILABLE_TIME",
+        [13] = "XM22_RE_ROBBERY_AVAILABLE_TIME",
+        [14] = "STANDARD_KEYBIND_AVAILABILITY",
+        [15] = "XM22_RE_BANK_SHOOTOUT_AVAILABLE_TIME",
+        [16] = 295363, -- Global_262145.f_33218 - Armored Truck (doesn't have a tunable)
+        [17] = "STANDARDCONTROLLERVOLUME_AVAILABILITY",
+        [18] = "SUM23_RE_GHOSTHUNT_AVAILABLE_TIME",
+        [19] = "XMAS_TRUCK_AVAILABLE_TIME"
     },
     NAMES = {
-        "Drug Vehicle",
-        "Movie Props",
-        "Sleeping Guard",
-        "Exotic Exports",
-        "Slashers",
-        "Phantom Car",
-        "Sightseeing",
-        "Smuggler Trail",
-        "Cerberus",
-        "Smuggler Plane",
-        "Crime Scene",
-        "Metal Detector",
-        "Finders Keepers",
-        "Store Robbery",
-        "Gooch",
-        "Weazel Bank Shootout",
-        "Armored Truck",
-        "Possessed Animals",
-        "Ghosts Exposed",
-        "Happy Holidays Hauler"
+        [0]  = "Drug Vehicle",
+        [1]  = "Movie Props",
+        [2]  = "Sleeping Guard",
+        [3]  = "Exotic Exports",
+        [4]  = "Slashers",
+        [5]  = "Phantom Car",
+        [6]  = "Sightseeing",
+        [7]  = "Smuggler Trail",
+        [8]  = "Cerberus",
+        [9]  = "Smuggler Plane",
+        [10] = "Crime Scene",
+        [11] = "Metal Detector",
+        [12] = "Finders Keepers",
+        [13] = "Store Robbery",
+        [14] = "Gooch",
+        [15] = "Weazel Bank Shootout",
+        [16] = "Armored Truck",
+        [17] = "Possessed Animals",
+        [18] = "Ghosts Exposed",
+        [19] = "Happy Holidays Hauler"
     }
 }
 
@@ -252,11 +252,11 @@ end
 local function COMBO_CLEANUP()
     selected_loc = 0
     if selected_event == RE.IDS.ARMOURED_TRUCK then
-    	set_cooldown     = globals.get_int(RE.COOLDOWNS[selected_event + 1])
-    	set_availability = globals.get_int(RE.AVAILABILITIES[selected_event + 1])
+    	set_cooldown     = globals.get_int(RE.COOLDOWNS[selected_event])
+    	set_availability = globals.get_int(RE.AVAILABILITIES[selected_event])
     else
-    	set_cooldown     = tunables.get_int(RE.COOLDOWNS[selected_event + 1])
-    	set_availability = tunables.get_int(RE.AVAILABILITIES[selected_event + 1])
+    	set_cooldown     = tunables.get_int(RE.COOLDOWNS[selected_event])
+    	set_availability = tunables.get_int(RE.AVAILABILITIES[selected_event])
     end
 end
 
@@ -272,20 +272,30 @@ local function HELP_MARKER(text)
     end
 end
 
+local function SHOULD_DISABLE_ESP()
+    return script.is_active("appinternet") or
+        HUD.IS_PAUSE_MENU_ACTIVE() or
+        NETWORK.NETWORK_IS_IN_MP_CUTSCENE() or
+        not CAM.IS_GAMEPLAY_CAM_RENDERING() or
+        HUD.IS_HUD_COMPONENT_ACTIVE(16) or  -- HUD_RADIO_STATIONS
+        HUD.IS_HUD_COMPONENT_ACTIVE(19) or  -- HUD_WEAPON_WHEEL
+        globals.get_int(23692 + 4) == 1     -- is selector UI rendering
+end
+
 local function REGISTER_MAX_VARIATIONS()
     if variations_registered then
         return
     end
     
     if script.is_active("freemode") and re_initialized then
-        for i = 0, max_num_re - 1 do
+        for i = 0, max_num_re do
             local fmmc_type     = locals.get_int("freemode", RE.CORE.FMRE_DATA + 241 + 1 + (i + 1))
             local max_variation = scr_function.call_script_function("freemode", "GMFV", "2D 02 04 00 00 38 00 55", "int", {
                 { "int", fmmc_type },
                 { "int", 0 }
             })
             
-            max_variations[i + 1] = max_variation - 1
+            max_variations[i] = max_variation - 1
         end
         
         variations_registered = true
@@ -301,7 +311,7 @@ local function REQUEST_RANDOM_EVENT(event, variation)
 end
 
 local function HOOK_SHOULD_TRIGGER_FUNCTIONS(value)
-    for i = 0, max_num_re - 1 do
+    for i = 0, max_num_re do
         if i == RE.IDS.PHANTOM_CAR or i == RE.IDS.XMAS_MUGGER or i == RE.IDS.XMAS_TRUCK then
             locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 5, value)
         else
@@ -311,42 +321,42 @@ local function HOOK_SHOULD_TRIGGER_FUNCTIONS(value)
 end
 
 local function RESTORE_SHOULD_TRIGGER_FUNCTIONS()
-    for i = 0, max_num_re - 1 do
+    for i = 0, max_num_re do
         if i == RE.IDS.PHANTOM_CAR or i == RE.IDS.XMAS_MUGGER or i == RE.IDS.XMAS_TRUCK then
-            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 5, RE.FUNC_HOOKS.SHOULD_TRIGGER[i + 1])
+            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 5, RE.FUNC_HOOKS.SHOULD_TRIGGER[i])
         else
-            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 1 + 1, RE.FUNC_HOOKS.SHOULD_TRIGGER[i + 1])
+            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 1 + 1, RE.FUNC_HOOKS.SHOULD_TRIGGER[i])
         end
     end
 end
 
--- The original functions return a null vector, resulting in the script event not updating the value of Global_1882037.f_1[event /*15*/].f_10. To fix this issue, I replace the value of local pointers with the actual functions that return the coordinates of the event.
+-- The original functions return a null vector, resulting in the script event not updating the value of Global_1882037.f_1[event /*15*/].f_10. To fix this issue, I replace the value of local pointers with the address of functions that actually return the coordinates of the event.
 local function PATCH_EVENT_COORDS()
     -- The game crashes on session change if I set the values in a loop when script is not active for some reason.
     if script.is_active("fm_content_slasher") then
-        locals.set_int("fm_content_slasher", 405 + 105, RE.FUNC_HOOKS.REAL_COORDS[1])
+        locals.set_int("fm_content_slasher", 405 + 105, RE.FUNC_HOOKS.REAL_COORDS[0])
     end
     if script.is_active("fm_content_phantom_car") then
-    	locals.set_int("fm_content_phantom_car", 388 + 105, RE.FUNC_HOOKS.REAL_COORDS[2])
+    	locals.set_int("fm_content_phantom_car", 388 + 105, RE.FUNC_HOOKS.REAL_COORDS[1])
     end
     if script.is_active("fm_content_cerberus") then
-    	locals.set_int("fm_content_cerberus", 403 + 105, RE.FUNC_HOOKS.REAL_COORDS[3])
+    	locals.set_int("fm_content_cerberus", 403 + 105, RE.FUNC_HOOKS.REAL_COORDS[2])
     end
     if script.is_active("fm_content_xmas_mugger") then
-    	locals.set_int("fm_content_xmas_mugger", 417 + 105, RE.FUNC_HOOKS.REAL_COORDS[4])
+    	locals.set_int("fm_content_xmas_mugger", 417 + 105, RE.FUNC_HOOKS.REAL_COORDS[3])
     end
     if script.is_active("fm_content_possessed_animals") then
-    	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_HOOKS.REAL_COORDS[5])
+    	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_HOOKS.REAL_COORDS[4])
     end
 end
 
 local function RESET_UPDATE_EVENT_COORDS_DELAY()
-    for i = 0, max_num_re - 1 do
-        if script.is_active(RE.SCRIPTS[i + 1]) then
-            local base_address = RE.LOCALS.COORD_DELAYS[i + 1][1]
-            local offset       = RE.LOCALS.COORD_DELAYS[i + 1][2]
+    for i = 0, max_num_re do
+        if script.is_active(RE.SCRIPTS[i]) then
+            local base_address = RE.LOCALS.COORD_DELAYS[i][1]
+            local offset       = RE.LOCALS.COORD_DELAYS[i][2]
             
-            locals.set_int(RE.SCRIPTS[i + 1], base_address + offset + 1, 1) -- There will be a race condition here since the script will set the value back to 0 just before sending the script event, but this shouldn't be a big problem.
+            locals.set_int(RE.SCRIPTS[i], base_address + offset + 1, 1) -- There will be a race condition here since the script will set the value back to 0 just before sending the script event, but this shouldn't be a big problem.
         end
     end
 end
@@ -384,31 +394,31 @@ local function SET_SPECIAL_EVENT_TUNABLES(toggle)
     tunables.set_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022", toggle)
     tunables.set_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL", toggle)
     tunables.set_bool("ENABLE_HALLOWEEN_GHOSTHUNT", toggle)
-    tunables.set_bool(-818123201, toggle) -- This will invalidate ENABLE_HALLOWEEN_GHOSTHUNT
+    tunables.set_bool(-818123201, toggle) -- This will invalidate ENABLE_HALLOWEEN_GHOSTHUNT.
     tunables.set_bool(2093114948, toggle)
 end
 
 local function CHECK_EVENT_TUNABLES()
-    is_tunable_active[RE.IDS.DRUG_VEHICLE + 1]      = tunables.get_bool("SUM_RANDOM_EVENT_DRUG_VEHICLE_ENABLE")
-    is_tunable_active[RE.IDS.MOVIE_PROPS + 1]       = tunables.get_bool("COLLECTABLES_MOVIE_PROPS")
-    is_tunable_active[RE.IDS.GOLDEN_GUN + 1]        = true -- Sleeping Guard (no tunable)
-    is_tunable_active[RE.IDS.VEHICLE_LIST + 1]      = true -- Exotic Exports (no tunable)
-    is_tunable_active[RE.IDS.SLASHER + 1]           = tunables.get_int("STANDARDCONTROLLERVOLUME") ~= -1
-    is_tunable_active[RE.IDS.PHANTOM_CAR + 1]       = tunables.get_int("STANDARDTARGETTINGTIME") ~= -1
-    is_tunable_active[RE.IDS.SIGHTSEEING + 1]       = tunables.get_int("SSP2POSIX") > 0
-    is_tunable_active[RE.IDS.SMUGGLER_TRAIL + 1]    = tunables.get_bool("ENABLE_SU22_SMUGGLER_TRAIL")
-    is_tunable_active[RE.IDS.CERBERUS + 1]          = tunables.get_int("NC_SOURCE_TRUCK_HEAD_COUNT") == 3
-    is_tunable_active[RE.IDS.SMUGGLER_PLANE + 1]    = tunables.get_bool("ENABLE_SU22_SMUGGLER_PLANE")
-    is_tunable_active[RE.IDS.CRIME_SCENE + 1]       = tunables.get_bool("ENABLE_SUM22_CRIME_SCENES")
-    is_tunable_active[RE.IDS.METAL_DETECTOR + 1]    = tunables.get_bool("COLLECTABLES_BURIED_STASH")
-    is_tunable_active[RE.IDS.CONVOY + 1]            = tunables.get_bool("ENABLE_GANGCONVOY_DLC22022")
-    is_tunable_active[RE.IDS.ROBBERY + 1]           = tunables.get_bool("XM22_ROBBERY_ENABLE")
-    is_tunable_active[RE.IDS.XMAS_MUGGER + 1]       = tunables.get_int("STANDARD_KEYBIND_SELECTION") ~= -1
-    is_tunable_active[RE.IDS.BANK_SHOOTOUT + 1]     = tunables.get_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022")
-    is_tunable_active[RE.IDS.ARMOURED_TRUCK + 1]    = tunables.get_bool("ENABLE_RANDOM_EVENT_ARMORED_TRUCK")
-    is_tunable_active[RE.IDS.POSSESSED_ANIMALS + 1] = tunables.get_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL")
-    is_tunable_active[RE.IDS.GHOSTHUNT + 1]         = tunables.get_bool("ENABLE_HALLOWEEN_GHOSTHUNT") or tunables.get_bool(-818123201)
-    is_tunable_active[RE.IDS.XMAS_TRUCK + 1]        = tunables.get_bool(2093114948)
+    is_tunable_active[RE.IDS.DRUG_VEHICLE]      = tunables.get_bool("SUM_RANDOM_EVENT_DRUG_VEHICLE_ENABLE")
+    is_tunable_active[RE.IDS.MOVIE_PROPS]       = tunables.get_bool("COLLECTABLES_MOVIE_PROPS")
+    is_tunable_active[RE.IDS.GOLDEN_GUN]        = true -- Sleeping Guard (no tunable)
+    is_tunable_active[RE.IDS.VEHICLE_LIST]      = true -- Exotic Exports (no tunable)
+    is_tunable_active[RE.IDS.SLASHER]           = tunables.get_int("STANDARDCONTROLLERVOLUME") ~= -1
+    is_tunable_active[RE.IDS.PHANTOM_CAR]       = tunables.get_int("STANDARDTARGETTINGTIME") ~= -1
+    is_tunable_active[RE.IDS.SIGHTSEEING]       = tunables.get_int("SSP2POSIX") > 0
+    is_tunable_active[RE.IDS.SMUGGLER_TRAIL]    = tunables.get_bool("ENABLE_SU22_SMUGGLER_TRAIL")
+    is_tunable_active[RE.IDS.CERBERUS]          = tunables.get_int("NC_SOURCE_TRUCK_HEAD_COUNT") == 3
+    is_tunable_active[RE.IDS.SMUGGLER_PLANE]    = tunables.get_bool("ENABLE_SU22_SMUGGLER_PLANE")
+    is_tunable_active[RE.IDS.CRIME_SCENE]       = tunables.get_bool("ENABLE_SUM22_CRIME_SCENES")
+    is_tunable_active[RE.IDS.METAL_DETECTOR]    = tunables.get_bool("COLLECTABLES_BURIED_STASH")
+    is_tunable_active[RE.IDS.CONVOY]            = tunables.get_bool("ENABLE_GANGCONVOY_DLC22022")
+    is_tunable_active[RE.IDS.ROBBERY]           = tunables.get_bool("XM22_ROBBERY_ENABLE")
+    is_tunable_active[RE.IDS.XMAS_MUGGER]       = tunables.get_int("STANDARD_KEYBIND_SELECTION") ~= -1
+    is_tunable_active[RE.IDS.BANK_SHOOTOUT]     = tunables.get_bool("ENABLE_MAZEBANKSHOOTOUT_DLC22022")
+    is_tunable_active[RE.IDS.ARMOURED_TRUCK]    = tunables.get_bool("ENABLE_RANDOM_EVENT_ARMORED_TRUCK")
+    is_tunable_active[RE.IDS.POSSESSED_ANIMALS] = tunables.get_bool("ENABLE_HALLOWEEN_POSSESSED_ANIMAL")
+    is_tunable_active[RE.IDS.GHOSTHUNT]         = tunables.get_bool("ENABLE_HALLOWEEN_GHOSTHUNT") or tunables.get_bool(-818123201)
+    is_tunable_active[RE.IDS.XMAS_TRUCK]        = tunables.get_bool(2093114948)
 end
 
 local function ARE_EVENTS_INITIALIZED()
@@ -416,7 +426,7 @@ local function ARE_EVENTS_INITIALIZED()
 end
 
 local function GET_MAX_NUMBER_OF_EVENTS()
-    return locals.get_int("freemode", RE.CORE.FMRE_DATA + 241)
+    return locals.get_int("freemode", RE.CORE.FMRE_DATA + 241) - 1
 end
 
 local function GET_PLAYER_STATE(event, player_id)
@@ -433,7 +443,7 @@ end
 
 local function GET_EVENT_COORDS(event)
     if event == RE.IDS.GHOSTHUNT then
-    	return locals.get_vec3(RE.SCRIPTS[RE.IDS.GHOSTHUNT + 1], 232 + 85 + 1 + (1 + (0 * 12)) + 4)
+    	return locals.get_vec3(RE.SCRIPTS[RE.IDS.GHOSTHUNT], 232 + 85 + 1 + (1 + (0 * 12)) + 4)
     else
     	return globals.get_vec3(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)) + 10)
     end
@@ -458,7 +468,7 @@ end
 local function GET_NUM_LOCALLY_ACTIVE_EVENTS()
     local num_events = 0
     
-    for i = 0, max_num_re - 1 do
+    for i = 0, max_num_re do
         local local_state = GET_PLAYER_STATE(i, self.get_id())
         
         if local_state ~= RE.STATES.INACTIVE then
@@ -527,23 +537,17 @@ local function LOOPED_UPDATE_RE_INFO()
     event_availability     = GET_EVENT_AVAILABILITY(selected_event)
     cooldown_time_left     = GET_EVENT_TIME_LEFT(event_cooldown, event_timer)
     availability_time_left = GET_EVENT_TIME_LEFT(event_availability, event_timer)
-    event_host_id          = NETWORK.NETWORK_GET_HOST_OF_SCRIPT(RE.SCRIPTS[selected_event + 1], selected_event, 0)
+    event_host_id          = NETWORK.NETWORK_GET_HOST_OF_SCRIPT(RE.SCRIPTS[selected_event], selected_event, 0)
     event_host_name 	   = PLAYER.GET_PLAYER_NAME(event_host_id)
     max_active_events      = tunables.get_int("FMREMAXACTIVATEDEVENTS")
 end
 
 local function LOOPED_RENDER_ESP()
-    if script.is_active("appinternet") or
-    HUD.IS_PAUSE_MENU_ACTIVE() or
-    NETWORK.NETWORK_IS_IN_MP_CUTSCENE() or not
-    CAM.IS_GAMEPLAY_CAM_RENDERING() or
-    HUD.IS_HUD_COMPONENT_ACTIVE(16) or -- HUD_RADIO_STATIONS
-    HUD.IS_HUD_COMPONENT_ACTIVE(19) or -- HUD_WEAPON_WHEEL
-    globals.get_int(23692 + 4) == 1 then -- is selector UI rendering
+    if SHOULD_DISABLE_ESP() then
         return
     end
     
-    for i = 0, max_num_re - 1 do
+    for i = 0, max_num_re do
     	local state         = GET_EVENT_STATE(i)
     	local coords        = GET_EVENT_COORDS(i)
     	local timer         = GET_EVENT_TIMER(i)
@@ -556,7 +560,7 @@ local function LOOPED_RENDER_ESP()
             local distance           = MISC.GET_DISTANCE_BETWEEN_COORDS(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, false)
             local km_or_m            = (distance < 1000) and "m" or "km"
             local formatted_distance = (distance < 1000) and distance or (distance / 1000.0)
-            local text               = string.format("%s (%.2f%s) %s", (state == RE.STATES.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. RE.NAMES[i + 1] .. "~s~", formatted_distance, km_or_m, (state == RE.STATES.AVAILABLE and "~n~" .. time_left or ""))
+            local text               = string.format("%s (%.2f%s) %s", (state == RE.STATES.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. RE.NAMES[i] .. "~s~", formatted_distance, km_or_m, (state == RE.STATES.AVAILABLE and "~n~" .. time_left or ""))
             local screen_x           = 0.0
             local screen_y           = 0.0
             
@@ -585,7 +589,7 @@ local function LOOPED_RENDER_ESP()
 end
 
 local function LOOPED_NOTIFY_PLAYER()
-    for i = 0, max_num_re - 1 do
+    for i = 0, max_num_re do
         local state = GET_EVENT_STATE(i)
         
         if state == RE.STATES.ACTIVE then
@@ -595,8 +599,8 @@ local function LOOPED_NOTIFY_PLAYER()
                 if triggerer_index ~= -1 then
                     local triggerer_name = PLAYER.GET_PLAYER_NAME(triggerer_index)
                 
-                    gui.show_message("Random Events", "" .. RE.NAMES[i + 1] .. " is triggered by " .. triggerer_name .. ".")
-                    if logging then log.info("" .. RE.NAMES[i + 1] .. " is triggered by " .. triggerer_name .. ".") end
+                    gui.show_message("Random Events", "" .. RE.NAMES[i] .. " is triggered by " .. triggerer_name .. ".")
+                    if logging then log.info("" .. RE.NAMES[i] .. " is triggered by " .. triggerer_name .. ".") end
                     notified_active[i] = true
                 end
             end
@@ -604,12 +608,12 @@ local function LOOPED_NOTIFY_PLAYER()
         
         if state == RE.STATES.AVAILABLE then
             if not notified_available[i] then
-            	if is_tunable_active[i + 1] then
-                    gui.show_message("Random Events", "" .. RE.NAMES[i + 1] .. " is available.")
-                    if logging then log.info("" .. RE.NAMES[i + 1] .. " is available.") end
+            	if is_tunable_active[i] then
+                    gui.show_message("Random Events", "" .. RE.NAMES[i] .. " is available.")
+                    if logging then log.info("" .. RE.NAMES[i] .. " is available.") end
             	else
-                    gui.show_warning("Random Events", "" .. RE.NAMES[i + 1] .. " is available.\nWarning: Tunable is not active.")
-                    if logging then log.warning("" .. RE.NAMES[i + 1] .. " is available (tunable is not active).") end
+                    gui.show_warning("Random Events", "" .. RE.NAMES[i] .. " is available.\nWarning: Tunable is not active.")
+                    if logging then log.warning("" .. RE.NAMES[i] .. " is available (tunable is not active).") end
             	end
             	notified_available[i] = true
             end
@@ -680,10 +684,10 @@ re_tab:add_imgui(function()
     	return
     end
 	
-    if ImGui.BeginCombo("Select Event", RE.NAMES[selected_event + 1]) then
-        for i = 1, #RE.NAMES do
-            local is_selected = (i - 1 == selected_event)
-            local state       = GET_EVENT_STATE(i - 1)
+    if ImGui.BeginCombo("Select Event", RE.NAMES[selected_event]) then
+        for i = 0, #RE.NAMES do
+            local is_selected = (i == selected_event)
+            local state       = GET_EVENT_STATE(i)
         
             if state == RE.STATES.INACTIVE then
                 ImGui.PushStyleColor(ImGuiCol.Text, 1, 0, 0, 1)
@@ -694,7 +698,7 @@ re_tab:add_imgui(function()
             end
             
             if ImGui.Selectable(RE.NAMES[i], is_selected) then
-            	selected_event = i - 1
+            	selected_event = i
             	COMBO_CLEANUP()
             end
             
@@ -707,10 +711,10 @@ re_tab:add_imgui(function()
         ImGui.EndCombo()
     end
 	
-    selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. max_variations[selected_event + 1] .. ")", selected_loc)
+    selected_loc, on_modified = ImGui.InputInt("Select Location (0-" .. max_variations[selected_event] .. ")", selected_loc)
     
     if on_modified then
-    	selected_loc = CLAMP(selected_loc, 0, max_variations[selected_event + 1])
+    	selected_loc = CLAMP(selected_loc, 0, max_variations[selected_event])
     end
     
     if num_active_events >= max_active_events then
@@ -741,7 +745,7 @@ re_tab:add_imgui(function()
             SET_EVENT_STATE(selected_event, RE.STATES.CLEANUP)
         elseif event_state == RE.STATES.ACTIVE then
             if event_host_id == self.get_id() then
-            	SET_EVENT_END_REASON(selected_event + 1, 3)
+            	SET_EVENT_END_REASON(selected_event, 3) -- 3 means the fm_content_* script mission is completed and can be gracefully terminated.
             else
             	gui.show_error("Random Events", "Failed to kill event. You must be event host.")
             end
@@ -773,7 +777,7 @@ re_tab:add_imgui(function()
     	event_state == RE.STATES.AVAILABLE and "Available - deactivating in " .. availability_time_left or
     	event_state == RE.STATES.ACTIVE and "Active" or
     	event_state == RE.STATES.CLEANUP and "Cleanup" or
-    	"None"))
+    	"N/A"))
     HELP_MARKER("Shows the current state of the event.\n- Inactive\n- Available\n- Active\n- Cleanup")
     
     if event_state == RE.STATES.ACTIVE then
@@ -784,8 +788,8 @@ re_tab:add_imgui(function()
         if event_host_id ~= self.get_id() then
             if ImGui.SmallButton("Take Control") then
                 script.run_in_fiber(function()
-                    if script.is_active(RE.SCRIPTS[selected_event + 1]) then
-                    	network.force_script_host(RE.SCRIPTS[selected_event + 1])
+                    if script.is_active(RE.SCRIPTS[selected_event]) then
+                    	network.force_script_host(RE.SCRIPTS[selected_event])
                     else
                     	gui.show_error("Random Events", "Event script is not active. Are you a participant?")
                     end

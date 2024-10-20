@@ -205,25 +205,26 @@ local RE = {
     }
 }
 
-local selected_event       = 0
-local selected_target      = 0
-local selected_loc         = 0
-local set_cooldown         = 1800000
-local set_availability     = 900000
-local enable_esp           = true
-local enable_line          = true
-local enable_sphere        = true
-local enable_notifications = true
-local force_freemode_host  = true
-local apply_in_minutes     = false
-local set_target_player    = false
-local enable_tunables      = false
-local bypass_requirements  = false
-local disable_all_events   = false
-local logging              = false
-local notified_available   = {}
-local notified_active      = {}
-local is_tunable_active    = {}
+local selected_event                = 0
+local selected_target               = 0
+local selected_loc                  = 0
+local set_cooldown                  = 1800000
+local set_availability              = 900000
+local enable_esp                    = true
+local enable_line                   = true
+local enable_sphere                 = true
+local enable_notifications          = true
+local force_freemode_host           = true
+local apply_in_minutes              = false
+local set_target_player             = false
+local enable_tunables               = false
+local bypass_requirements           = false
+local disable_all_events            = false
+local remove_activated_events_limit = false
+local logging                       = false
+local notified_available            = {}
+local notified_active               = {}
+local is_tunable_active             = {}
 
 local event_coords           = RE.CORE.VECTOR_ZERO
 local event_state            = RE.STATES.INACTIVE
@@ -233,7 +234,7 @@ local event_variation        = 0
 local event_cooldown         = 0
 local event_availability     = 0
 local max_num_re             = 0
-local max_events             = 0
+local max_activated_events   = 0
 local num_active_events      = 0
 local event_host_id          = 0
 local target_player_id       = 0
@@ -361,6 +362,10 @@ local function RESET_UPDATE_EVENT_COORDS_DELAY()
     end
 end
 
+local function SET_MAX_NUMBER_OF_ACTIVATED_EVENTS_COUNT(count)
+    tunables.set_int("FMREMAXACTIVATEDEVENTS", count)
+end
+
 local function SET_EVENT_STATE(event, state)
     globals.set_int(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)), state)
 end
@@ -380,7 +385,7 @@ end
 
 local function SET_EVENT_END_REASON(event, reason)
     local base_address = RE.LOCALS.END_REASONS[event][1]
-    local offset 	   = RE.LOCALS.END_REASONS[event][2]
+    local offset       = RE.LOCALS.END_REASONS[event][2]
     
     locals.set_int(RE.SCRIPTS[event], base_address + offset, reason)
 end
@@ -427,6 +432,10 @@ end
 
 local function GET_MAX_NUMBER_OF_EVENTS()
     return locals.get_int("freemode", RE.CORE.FMRE_DATA + 241) - 1
+end
+
+local function GET_MAX_NUMBER_OF_ACTIVATED_EVENTS_COUNT()
+    return tunables.get_int("FMREMAXACTIVATEDEVENTS")
 end
 
 local function GET_PLAYER_STATE(event, player_id)
@@ -523,9 +532,10 @@ local function GET_EVENT_TIME_LEFT(event_time, timer)
     return formatted
 end
 
-local function LOOPED_UPDATE_RE_INFO()
+local function LOOPED_UPDATE_RE_DATA()
     re_initialized         = ARE_EVENTS_INITIALIZED()
     max_num_re             = GET_MAX_NUMBER_OF_EVENTS()
+    max_activated_events   = GET_MAX_NUMBER_OF_ACTIVATED_EVENTS_COUNT()
     num_active_events      = GET_NUM_LOCALLY_ACTIVE_EVENTS()
     target_players         = GET_TARGET_PLAYERS()
     event_state            = GET_EVENT_STATE(selected_event)
@@ -539,7 +549,6 @@ local function LOOPED_UPDATE_RE_INFO()
     availability_time_left = GET_EVENT_TIME_LEFT(event_availability, event_timer)
     event_host_id          = NETWORK.NETWORK_GET_HOST_OF_SCRIPT(RE.SCRIPTS[selected_event], selected_event, 0)
     event_host_name 	   = PLAYER.GET_PLAYER_NAME(event_host_id)
-    max_active_events      = tunables.get_int("FMREMAXACTIVATEDEVENTS")
 end
 
 local function LOOPED_RENDER_ESP()
@@ -640,7 +649,7 @@ event.register_handler(menu_event.MenuUnloaded, function()
 end)
 
 script.register_looped("Random Events", function()
-    LOOPED_UPDATE_RE_INFO()
+    LOOPED_UPDATE_RE_DATA()
     REGISTER_MAX_VARIATIONS()
 
     if re_initialized then
@@ -659,6 +668,10 @@ script.register_looped("Random Events", function()
     	if disable_all_events then
             HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.FUNC_HOOKS.FM_RETURN_FALSE)
     	end
+		
+        if remove_activated_events_limit then
+            SET_MAX_NUMBER_OF_ACTIVATED_EVENTS_COUNT(max_num_re + 1)
+        end
     
     	if set_target_player then
             SET_EVENT_TARGET(target_player_id)
@@ -717,10 +730,10 @@ re_tab:add_imgui(function()
     	selected_loc = CLAMP(selected_loc, 0, max_variations[selected_event])
     end
     
-    if num_active_events >= max_active_events then
-    	ImGui.TextColored(1, 0, 0, 1, "Active Events: " .. num_active_events .. "/" .. max_active_events)
+    if num_active_events >= max_activated_events then
+    	ImGui.TextColored(1, 0, 0, 1, "Active Events: " .. num_active_events .. "/" .. max_activated_events)
     else
-    	ImGui.Text("Active Events: " .. num_active_events .. "/" .. max_active_events)
+    	ImGui.Text("Active Events: " .. num_active_events .. "/" .. max_activated_events)
     end
     HELP_MARKER("Shows the current number of active events (locally) out of the maximum allowed.")
 	
@@ -919,6 +932,15 @@ re_tab:add_imgui(function()
         if on_tick then
             if not disable_all_events then
             	RESTORE_SHOULD_TRIGGER_FUNCTIONS()
+            end
+        end
+		
+        remove_activated_events_limit, on_tick = ImGui.Checkbox("Remove Max Activated Events Limit", remove_activated_events_limit)
+        HELP_MARKER("Removes the limit on the maximum number of activated events you can have. Use with caution.")
+		
+        if on_tick then
+            if not remove_activated_events_limit then
+                SET_MAX_NUMBER_OF_ACTIVATED_EVENTS_COUNT(3)
             end
         end
         

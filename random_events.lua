@@ -59,7 +59,7 @@ local RE = {
             [18] = { 1552, 88  },
             [19] = { 1461, 91  }
         },
-        COORD_DELAYS = {
+        COORD_COOLDOWNS = {
             [0]  = { 1762, 145 },
             [1]  = { 1888, 167 },
             [2]  = { 1762, 127 },
@@ -82,7 +82,7 @@ local RE = {
             [19] = { 1461, 121 }
         }
     },
-    FUNC_HOOKS = {
+    FUNC_POINTERS = {
         FM_RETURN_TRUE  = 0x75F9,
         FM_RETURN_FALSE = 0x7C828,
         SHOULD_TRIGGER = {
@@ -186,18 +186,18 @@ local RE = {
         [1]  = "Movie Props",
         [2]  = "Sleeping Guard",
         [3]  = "Exotic Exports",
-        [4]  = "Slashers",
+        [4]  = "The Slashers",
         [5]  = "Phantom Car",
         [6]  = "Sightseeing",
         [7]  = "Smuggler Trail",
-        [8]  = "Cerberus",
+        [8]  = "Cerberus Surprise",
         [9]  = "Smuggler Plane",
         [10] = "Crime Scene",
         [11] = "Metal Detector",
         [12] = "Finders Keepers",
-        [13] = "Store Robbery",
-        [14] = "Gooch",
-        [15] = "Weazel Bank Shootout",
+        [13] = "Shop Robbery",
+        [14] = "The Gooch",
+        [15] = "Weazel Plaza Shootout",
         [16] = "Armored Truck",
         [17] = "Possessed Animals",
         [18] = "Ghosts Exposed",
@@ -275,6 +275,7 @@ end
 
 local function SHOULD_DISABLE_ESP()
     return script.is_active("appinternet") or
+        script.is_active("appcamera") or
         HUD.IS_PAUSE_MENU_ACTIVE() or
         NETWORK.NETWORK_IS_IN_MP_CUTSCENE() or
         not CAM.IS_GAMEPLAY_CAM_RENDERING() or
@@ -324,9 +325,9 @@ end
 local function RESTORE_SHOULD_TRIGGER_FUNCTIONS()
     for i = 0, max_num_re do
         if i == RE.IDS.PHANTOM_CAR or i == RE.IDS.XMAS_MUGGER or i == RE.IDS.XMAS_TRUCK then
-            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 5, RE.FUNC_HOOKS.SHOULD_TRIGGER[i])
+            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 5, RE.FUNC_POINTERS.SHOULD_TRIGGER[i])
         else
-            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 1 + 1, RE.FUNC_HOOKS.SHOULD_TRIGGER[i])
+            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 1 + 1, RE.FUNC_POINTERS.SHOULD_TRIGGER[i])
         end
     end
 end
@@ -335,27 +336,27 @@ end
 local function PATCH_EVENT_COORDS()
     -- The game crashes on session change if I set the values in a loop when script is not active for some reason.
     if script.is_active("fm_content_slasher") then
-        locals.set_int("fm_content_slasher", 405 + 105, RE.FUNC_HOOKS.REAL_COORDS[0])
+        locals.set_int("fm_content_slasher", 405 + 105, RE.FUNC_POINTERS.REAL_COORDS[0])
     end
     if script.is_active("fm_content_phantom_car") then
-    	locals.set_int("fm_content_phantom_car", 388 + 105, RE.FUNC_HOOKS.REAL_COORDS[1])
+    	locals.set_int("fm_content_phantom_car", 388 + 105, RE.FUNC_POINTERS.REAL_COORDS[1])
     end
     if script.is_active("fm_content_cerberus") then
-    	locals.set_int("fm_content_cerberus", 403 + 105, RE.FUNC_HOOKS.REAL_COORDS[2])
+    	locals.set_int("fm_content_cerberus", 403 + 105, RE.FUNC_POINTERS.REAL_COORDS[2])
     end
     if script.is_active("fm_content_xmas_mugger") then
-    	locals.set_int("fm_content_xmas_mugger", 417 + 105, RE.FUNC_HOOKS.REAL_COORDS[3])
+    	locals.set_int("fm_content_xmas_mugger", 417 + 105, RE.FUNC_POINTERS.REAL_COORDS[3])
     end
     if script.is_active("fm_content_possessed_animals") then
-    	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_HOOKS.REAL_COORDS[4])
+    	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_POINTERS.REAL_COORDS[4])
     end
 end
 
-local function RESET_UPDATE_EVENT_COORDS_DELAY()
+local function RESET_UPDATE_EVENT_COORDS_COOLDOWN()
     for i = 0, max_num_re do
         if script.is_active(RE.SCRIPTS[i]) then
-            local base_address = RE.LOCALS.COORD_DELAYS[i][1]
-            local offset       = RE.LOCALS.COORD_DELAYS[i][2]
+            local base_address = RE.LOCALS.COORD_COOLDOWNS[i][1]
+            local offset       = RE.LOCALS.COORD_COOLDOWNS[i][2]
             
             locals.set_int(RE.SCRIPTS[i], base_address + offset + 1, 1) -- There will be a race condition here since the script will set the value back to 0 just before sending the script event, but this shouldn't be a big problem.
         end
@@ -662,11 +663,11 @@ script.register_looped("Random Events", function()
     	end
     
     	if bypass_requirements then
-            HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.FUNC_HOOKS.FM_RETURN_TRUE)
+            HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.FUNC_POINTERS.FM_RETURN_TRUE)
     	end
     
     	if disable_all_events then
-            HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.FUNC_HOOKS.FM_RETURN_FALSE)
+            HOOK_SHOULD_TRIGGER_FUNCTIONS(RE.FUNC_POINTERS.FM_RETURN_FALSE)
     	end
 		
         if remove_activated_events_limit then
@@ -687,7 +688,7 @@ script.register_looped("Random Events", function()
         end
     
         PATCH_EVENT_COORDS()
-        RESET_UPDATE_EVENT_COORDS_DELAY()
+        RESET_UPDATE_EVENT_COORDS_COOLDOWN()
     end
 end)
 

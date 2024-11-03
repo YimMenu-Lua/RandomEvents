@@ -5,8 +5,7 @@ local RE = {
     	REQUEST_RE_HASH = -126218586,
     	GSBD_RE         = 1882247,
     	GPBD_FM_2       = 1882632,
-    	FMRE_DATA       = 15727,
-    	VECTOR_ZERO     = vec3:new(0, 0, 0)
+    	FMRE_DATA       = 15727
     },
     IDS = {
     	DRUG_VEHICLE      = 0,
@@ -112,7 +111,8 @@ local RE = {
             [1] = 0x217452, -- Phantom Car
             [2] = 0x21B4C0, -- Cerberus
             [3] = 0x217FCE, -- Gooch
-            [4] = 0x217B52  -- Possessed Animals
+            [4] = 0x217B52, -- Possessed Animals
+            [5] = 0xCDA7    -- Ghosts Exposed
         }
     },
     SCRIPTS = {
@@ -226,7 +226,7 @@ local notified_available            = {}
 local notified_active               = {}
 local is_tunable_active             = {}
 
-local event_coords           = RE.CORE.VECTOR_ZERO
+local event_coords           = vec3:new(0, 0, 0)
 local event_state            = RE.STATES.INACTIVE
 local event_trigger_range    = 0.0
 local event_timer            = 0
@@ -350,6 +350,9 @@ local function PATCH_EVENT_COORDS()
     if script.is_active("fm_content_possessed_animals") then
     	locals.set_int("fm_content_possessed_animals", 401 + 105, RE.FUNC_POINTERS.REAL_COORDS[4])
     end
+    if script.is_active("fm_content_ghosthunt") then
+        locals.set_int("fm_content_ghosthunt", 421 + 105, RE.FUNC_POINTERS.REAL_COORDS[5])
+    end	
 end
 
 local function RESET_UPDATE_EVENT_COORDS_COOLDOWN()
@@ -452,11 +455,7 @@ local function GET_EVENT_VARIATION(event)
 end
 
 local function GET_EVENT_COORDS(event)
-    if event == RE.IDS.GHOSTHUNT then
-    	return locals.get_vec3(RE.SCRIPTS[RE.IDS.GHOSTHUNT], 232 + 85 + 1 + (1 + (0 * 12)) + 4)
-    else
-    	return globals.get_vec3(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)) + 10)
-    end
+    return globals.get_vec3(RE.CORE.GSBD_RE + 1 + (1 + (event * 15)) + 10)
 end
 
 local function GET_EVENT_TRIGGER_RANGE(event)
@@ -566,7 +565,7 @@ local function LOOPED_RENDER_ESP()
     	local trigger_range = GET_EVENT_TRIGGER_RANGE(i)	
     	local colors        = state == RE.STATES.ACTIVE and { 0, 153, 51 } or { 93, 182, 229 }
     
-    	if state ~= RE.STATES.INACTIVE and coords ~= RE.CORE.VECTOR_ZERO then
+    	if state ~= RE.STATES.INACTIVE and coords ~= vec3:new(0, 0, 0) then
             local distance           = MISC.GET_DISTANCE_BETWEEN_COORDS(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, false)
             local km_or_m            = (distance < 1000) and "m" or "km"
             local formatted_distance = (distance < 1000) and distance or (distance / 1000.0)
@@ -773,7 +772,7 @@ re_tab:add_imgui(function()
     if ImGui.Button("Teleport to Event") then
         script.run_in_fiber(function()
             if event_state >= RE.STATES.AVAILABLE then
-            	if event_coords ~= RE.CORE.VECTOR_ZERO then
+            	if event_coords ~= vec3:new(0, 0, 0) then
                     PED.SET_PED_COORDS_KEEP_VEHICLE(self.get_ped(), event_coords.x, event_coords.y, event_coords.z)
             	else
                     gui.show_error("Random Events", "Failed to teleport to event. Wait for coordinates to be updated.")

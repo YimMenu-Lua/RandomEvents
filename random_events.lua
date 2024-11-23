@@ -342,7 +342,7 @@ local function RESTORE_SHOULD_TRIGGER_FUNCTIONS()
     end
 end
 
--- The original functions return a null vector, preventing the script event from updating the initial trigger point's value. To resolve this, event replace the local pointers with the addresses of functions that actually return the event's coordinates.
+-- The original functions return a null vector, preventing the script event from updating the initial trigger point's value. To resolve this, I replace the local pointers with the addresses of functions that actually return the event's coordinates.
 local function PATCH_EVENT_COORDS()
     -- The game crashes on session change if event set the values in a loop when script is not active for some reason.
     if script.is_active("fm_content_slasher") then
@@ -499,11 +499,11 @@ local function GET_NUM_LOCALLY_ACTIVE_EVENTS()
 end
 
 local function GET_TRIGGERER_INDEX(event)
-    for event = 0, 31 do
-        local player_state = GET_PLAYER_STATE(event, event)
+    for player = 0, 31 do
+        local player_state = GET_PLAYER_STATE(event, player)
         
         if player_state == RE.STATES.ACTIVE then
-            return event
+            return player
         end
     end
     
@@ -513,11 +513,11 @@ end
 local function GET_TARGET_PLAYERS()
     local player_table = {}
     
-    for event = 0, 31 do
-        local player_name = PLAYER.GET_PLAYER_NAME(event)
+    for player = 0, 31 do
+        local player_name = PLAYER.GET_PLAYER_NAME(player)
         
         if player_name ~= "**Invalid**" then
-            table.insert(player_table, {id = event, name = player_name})
+            table.insert(player_table, {id = player, name = player_name})
         end
     end
     

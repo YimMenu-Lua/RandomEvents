@@ -1,3 +1,7 @@
+-- TO-DO:
+-- Reset event tunables to their cloud value if available.
+-- Cleanup script on reload or unload.
+
 local re_tab = gui.get_tab("GUI_TAB_NETWORK"):add_tab("Random Events")
 
 local RE = {
@@ -85,12 +89,14 @@ local RE = {
         FM_RETURN_TRUE  = 0x75F9,
         FM_RETURN_FALSE = 0x7C828,
         SHOULD_TRIGGER = {
+            -- *_SHOULD_TRIGGER functions determine if the event can progress to the Active state from the Available state.
+            -- There are also the *_SHOULD_BE_AVAILABLE functions, which determine if the event can progress to the Available state from the Inactive state. The events that have this function don't have any special conditions to be triggered in their SHOULD_TRIGGER functions, they just return true.
             [0]  = 0x2B0F38,
             [1]  = 0x2B0E4C,
             [2]  = 0x2B0E1F,
             [3]  = 0x2B0DE1,
             [4]  = 0x2B01C8,
-            [5]  = 0x2AFE67, -- should be available check (should trigger has no checks and just returns true)
+            [5]  = 0x2AFE67, -- PHANTOM_CAR_SHOULD_BE_AVAILABLE
             [6]  = 0x2AFD85,
             [7]  = 0x2AFD42,
             [8]  = 0x2AFA8B,
@@ -99,18 +105,18 @@ local RE = {
             [11] = 0x2AF99D,
             [12] = 0x2AF94F,
             [13] = 0x2AF901,
-            [14] = 0x2AF5B0, -- should be available check (should trigger has no checks and just returns true)
+            [14] = 0x2AF5B0, -- XMAS_MUGGER_SHOULD_BE_AVAILABLE
             [15] = 0x2AF530,
             [16] = 0x2AF4D6,
             [17] = 0x2AF2ED,
             [18] = 0x2AEF81,
-            [19] = 0x2AEF4B, -- should be available check (should trigger has no checks and just returns true)
+            [19] = 0x2AEF4B  -- XMAS_TRUCK_SHOULD_BE_AVAILABLE
         },
         REAL_COORDS = {
-            [0] = 0x217235, -- Slashers
+            [0] = 0x217235, -- The Slashers
             [1] = 0x217452, -- Phantom Car
-            [2] = 0x21B4C0, -- Cerberus
-            [3] = 0x217FCE, -- Gooch
+            [2] = 0x21B4C0, -- Cerberus Surprise
+            [3] = 0x217FCE, -- The Gooch
             [4] = 0x217B52, -- Possessed Animals
             [5] = 0xCDA7    -- Ghosts Exposed
         }
@@ -281,7 +287,11 @@ local function SHOULD_DISABLE_ESP()
         not CAM.IS_GAMEPLAY_CAM_RENDERING() or
         HUD.IS_HUD_COMPONENT_ACTIVE(16) or  -- HUD_RADIO_STATIONS
         HUD.IS_HUD_COMPONENT_ACTIVE(19) or  -- HUD_WEAPON_WHEEL
-        globals.get_int(23692 + 4) == 1     -- is selector UI rendering
+        globals.get_int(23692 + 4) == 1     -- Is selector UI rendering
+end
+
+local function GET_FMMC_TYPE_OF_EVENT(event)
+    return locals.get_int("freemode", RE.CORE.FMRE_DATA + 241 + 1 + (event + 1))
 end
 
 local function REGISTER_MAX_VARIATIONS()
@@ -290,51 +300,51 @@ local function REGISTER_MAX_VARIATIONS()
     end
     
     if script.is_active("freemode") and re_initialized then
-        for i = 0, max_num_re do
-            local fmmc_type     = locals.get_int("freemode", RE.CORE.FMRE_DATA + 241 + 1 + (i + 1))
+        for event = 0, max_num_re do
+            local fmmc_type     = GET_FMMC_TYPE_OF_EVENT(event)
             local max_variation = scr_function.call_script_function("freemode", "GMFV", "2D 02 04 00 00 38 00 55", "int", {
                 { "int", fmmc_type },
                 { "int", 0 }
             })
             
-            max_variations[i] = max_variation - 1
+            max_variations[event] = max_variation - 1
         end
         
         variations_registered = true
     end
 end
 
--- This script event enables the first bit of Global_1882037.f_1[event /*15*/].f_3, which the script ignores all the checks if it is enabled.
+-- This script event enables the first bit of FMRE Client & Server Bitset, which makes the script ignore all the SHOULD_TRIGGER/SHOULD_BE_AVAILABLE conditions.
 local function REQUEST_RANDOM_EVENT(event, variation)
-    local fmmc_type = locals.get_int("freemode", RE.CORE.FMRE_DATA + 241 + 1 + (event + 1))
-    local args      = { RE.CORE.REQUEST_RE_HASH, 0, -1, fmmc_type, 0, variation, 0 }
+    local fmmc_type = GET_FMMC_TYPE_OF_EVENT(event)
+    local args      = { RE.CORE.REQUEST_RE_HASH, 0, -1, fmmc_type, 0, variation, 1 } -- The last argument makes the script set the client requested bit of all the other players in the session.
     
     network.trigger_script_event(-1, args)
 end
 
 local function HOOK_SHOULD_TRIGGER_FUNCTIONS(value)
-    for i = 0, max_num_re do
-        if i == RE.IDS.PHANTOM_CAR or i == RE.IDS.XMAS_MUGGER or i == RE.IDS.XMAS_TRUCK then
-            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 5, value)
+    for event = 0, max_num_re do
+        if event == RE.IDS.PHANTOM_CAR or event == RE.IDS.XMAS_MUGGER or event == RE.IDS.XMAS_TRUCK then
+            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 5, value)
         else
-            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 1 + 1, value)
+            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 1 + 1, value)
         end
     end
 end
 
 local function RESTORE_SHOULD_TRIGGER_FUNCTIONS()
-    for i = 0, max_num_re do
-        if i == RE.IDS.PHANTOM_CAR or i == RE.IDS.XMAS_MUGGER or i == RE.IDS.XMAS_TRUCK then
-            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 5, RE.FUNC_POINTERS.SHOULD_TRIGGER[i])
+    for event = 0, max_num_re do
+        if event == RE.IDS.PHANTOM_CAR or event == RE.IDS.XMAS_MUGGER or event == RE.IDS.XMAS_TRUCK then
+            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 5, RE.FUNC_POINTERS.SHOULD_TRIGGER[event])
         else
-            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (i * 12)) + 1 + 1, RE.FUNC_POINTERS.SHOULD_TRIGGER[i])
+            locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 1 + 1, RE.FUNC_POINTERS.SHOULD_TRIGGER[event])
         end
     end
 end
 
--- The original functions return a null vector, resulting in the script event not updating the value of Global_1882037.f_1[event /*15*/].f_10. To fix this issue, I replace the value of local pointers with the address of functions that actually return the coordinates of the event.
+-- The original functions return a null vector, preventing the script event from updating the initial trigger point's value. To resolve this, event replace the local pointers with the addresses of functions that actually return the event's coordinates.
 local function PATCH_EVENT_COORDS()
-    -- The game crashes on session change if I set the values in a loop when script is not active for some reason.
+    -- The game crashes on session change if event set the values in a loop when script is not active for some reason.
     if script.is_active("fm_content_slasher") then
         locals.set_int("fm_content_slasher", 405 + 105, RE.FUNC_POINTERS.REAL_COORDS[0])
     end
@@ -356,12 +366,12 @@ local function PATCH_EVENT_COORDS()
 end
 
 local function RESET_UPDATE_EVENT_COORDS_COOLDOWN()
-    for i = 0, max_num_re do
-        if script.is_active(RE.SCRIPTS[i]) then
-            local base_address = RE.LOCALS.COORD_COOLDOWNS[i][1]
-            local offset       = RE.LOCALS.COORD_COOLDOWNS[i][2]
+    for event = 0, max_num_re do
+        if script.is_active(RE.SCRIPTS[event]) then
+            local base_address = RE.LOCALS.COORD_COOLDOWNS[event][1]
+            local offset       = RE.LOCALS.COORD_COOLDOWNS[event][2]
             
-            locals.set_int(RE.SCRIPTS[i], base_address + offset + 1, 1) -- There will be a race condition here since the script will set the value back to 0 just before sending the script event, but this shouldn't be a big problem.
+            locals.set_int(RE.SCRIPTS[event], base_address + offset + 1, 1) -- There will be a race condition here since the script will set the value back to 0 just before sending the script event, but this shouldn't be a big problem.
         end
     end
 end
@@ -383,8 +393,8 @@ local function SET_EVENT_AVAILABILITY(event, value)
 end
 
 local function SET_EVENT_TARGET(target_id)
-    globals.set_int(RE.CORE.GSBD_RE + 304, target_id) -- Phantom Car Target (Also the Slasher target, but it doesn't work)
-    globals.set_int(RE.CORE.GSBD_RE + 304 + 1, target_id) -- Gooch Target
+    globals.set_int(RE.CORE.GSBD_RE + 304, target_id) -- Phantom Car Target
+    globals.set_int(RE.CORE.GSBD_RE + 304 + 1, target_id) -- The Gooch Target
 end
 
 local function SET_EVENT_END_REASON(event, reason)
@@ -477,8 +487,8 @@ end
 local function GET_NUM_LOCALLY_ACTIVE_EVENTS()
     local num_events = 0
     
-    for i = 0, max_num_re do
-        local local_state = GET_PLAYER_STATE(i, self.get_id())
+    for event = 0, max_num_re do
+        local local_state = GET_PLAYER_STATE(event, self.get_id())
         
         if local_state ~= RE.STATES.INACTIVE then
             num_events = num_events + 1
@@ -489,11 +499,11 @@ local function GET_NUM_LOCALLY_ACTIVE_EVENTS()
 end
 
 local function GET_TRIGGERER_INDEX(event)
-    for i = 0, 31 do
-        local player_state = GET_PLAYER_STATE(event, i)
+    for event = 0, 31 do
+        local player_state = GET_PLAYER_STATE(event, event)
         
         if player_state == RE.STATES.ACTIVE then
-            return i
+            return event
         end
     end
     
@@ -503,11 +513,11 @@ end
 local function GET_TARGET_PLAYERS()
     local player_table = {}
     
-    for i = 0, 31 do
-        local player_name = PLAYER.GET_PLAYER_NAME(i)
+    for event = 0, 31 do
+        local player_name = PLAYER.GET_PLAYER_NAME(event)
         
         if player_name ~= "**Invalid**" then
-            table.insert(player_table, {id = i, name = player_name})
+            table.insert(player_table, {id = event, name = player_name})
         end
     end
     
@@ -556,20 +566,20 @@ local function LOOPED_RENDER_ESP()
         return
     end
     
-    for i = 0, max_num_re do
-    	local state         = GET_EVENT_STATE(i)
-    	local coords        = GET_EVENT_COORDS(i)
-    	local timer         = GET_EVENT_TIMER(i)
-    	local availability  = GET_EVENT_AVAILABILITY(i)
+    for event = 0, max_num_re do
+    	local state         = GET_EVENT_STATE(event)
+    	local coords        = GET_EVENT_COORDS(event)
+    	local timer         = GET_EVENT_TIMER(event)
+    	local availability  = GET_EVENT_AVAILABILITY(event)
     	local time_left     = GET_EVENT_TIME_LEFT(availability, timer)
-    	local trigger_range = GET_EVENT_TRIGGER_RANGE(i)	
+    	local trigger_range = GET_EVENT_TRIGGER_RANGE(event)	
     	local colors        = state == RE.STATES.ACTIVE and { 0, 153, 51 } or { 93, 182, 229 }
     
     	if state ~= RE.STATES.INACTIVE and coords ~= vec3:new(0, 0, 0) then
             local distance           = MISC.GET_DISTANCE_BETWEEN_COORDS(self.get_pos().x, self.get_pos().y, self.get_pos().z, coords.x, coords.y, coords.z, false)
             local km_or_m            = (distance < 1000) and "m" or "km"
             local formatted_distance = (distance < 1000) and distance or (distance / 1000.0)
-            local text               = string.format("%s (%.2f%s) %s", (state == RE.STATES.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. RE.NAMES[i] .. "~s~", formatted_distance, km_or_m, (state == RE.STATES.AVAILABLE and "~n~" .. time_left or ""))
+            local text               = string.format("%s (%.2f%s) %s", (state == RE.STATES.ACTIVE and "~HUD_COLOUR_GREEN~" or "") .. RE.NAMES[event] .. "~s~", formatted_distance, km_or_m, (state == RE.STATES.AVAILABLE and "~n~" .. time_left or ""))
             local screen_x           = 0.0
             local screen_y           = 0.0
             
@@ -598,39 +608,39 @@ local function LOOPED_RENDER_ESP()
 end
 
 local function LOOPED_NOTIFY_PLAYER()
-    for i = 0, max_num_re do
-        local state = GET_EVENT_STATE(i)
+    for event = 0, max_num_re do
+        local state = GET_EVENT_STATE(event)
         
         if state == RE.STATES.ACTIVE then
-            if not notified_active[i] then
-                local triggerer_index = GET_TRIGGERER_INDEX(i)
+            if not notified_active[event] then
+                local triggerer_index = GET_TRIGGERER_INDEX(event)
             
                 if triggerer_index ~= -1 then
                     local triggerer_name = PLAYER.GET_PLAYER_NAME(triggerer_index)
                 
-                    gui.show_message("Random Events", "" .. RE.NAMES[i] .. " is triggered by " .. triggerer_name .. ".")
-                    if logging then log.info("" .. RE.NAMES[i] .. " is triggered by " .. triggerer_name .. ".") end
-                    notified_active[i] = true
+                    gui.show_message("Random Events", "" .. RE.NAMES[event] .. " is triggered by " .. triggerer_name .. ".")
+                    if logging then log.info("" .. RE.NAMES[event] .. " is triggered by " .. triggerer_name .. ".") end
+                    notified_active[event] = true
                 end
             end
         end
         
         if state == RE.STATES.AVAILABLE then
-            if not notified_available[i] then
-            	if is_tunable_active[i] then
-                    gui.show_message("Random Events", "" .. RE.NAMES[i] .. " is available.")
-                    if logging then log.info("" .. RE.NAMES[i] .. " is available.") end
+            if not notified_available[event] then
+            	if is_tunable_active[event] then
+                    gui.show_message("Random Events", "" .. RE.NAMES[event] .. " is available.")
+                    if logging then log.info("" .. RE.NAMES[event] .. " is available.") end
             	else
-                    gui.show_warning("Random Events", "" .. RE.NAMES[i] .. " is available.\nWarning: Tunable is not active.")
-                    if logging then log.warning("" .. RE.NAMES[i] .. " is available (tunable is not active).") end
+                    gui.show_warning("Random Events", "" .. RE.NAMES[event] .. " is available.\nWarning: Tunable is not active.")
+                    if logging then log.warning("" .. RE.NAMES[event] .. " is available (tunable is not active).") end
             	end
-            	notified_available[i] = true
+            	notified_available[event] = true
             end
         end
         
         if state == RE.STATES.INACTIVE then
-            notified_available[i] = false
-            notified_active[i] 	  = false
+            notified_available[event] = false
+            notified_active[event]    = false
         end
     end
 end
@@ -698,9 +708,9 @@ re_tab:add_imgui(function()
     end
 	
     if ImGui.BeginCombo("Select Event", RE.NAMES[selected_event]) then
-        for i = 0, #RE.NAMES do
-            local is_selected = (i == selected_event)
-            local state       = GET_EVENT_STATE(i)
+        for event = 0, #RE.NAMES do
+            local is_selected = (event == selected_event)
+            local state       = GET_EVENT_STATE(event)
         
             if state == RE.STATES.INACTIVE then
                 ImGui.PushStyleColor(ImGuiCol.Text, 1, 0, 0, 1)
@@ -710,8 +720,8 @@ re_tab:add_imgui(function()
             	ImGui.PushStyleColor(ImGuiCol.Text, 0, 1, 0, 1)
             end
             
-            if ImGui.Selectable(RE.NAMES[i], is_selected) then
-            	selected_event = i
+            if ImGui.Selectable(RE.NAMES[event], is_selected) then
+            	selected_event = event
             	COMBO_CLEANUP()
             end
             
@@ -883,11 +893,11 @@ re_tab:add_imgui(function()
             selected_target = CLAMP(selected_target, 0, #target_players - 1)
             
             if ImGui.BeginCombo("Select Target", target_players[selected_target + 1].name) then
-                for i, player in ipairs(target_players) do
-                    local is_selected = (i - 1 == selected_target)
+                for event, player in ipairs(target_players) do
+                    local is_selected = (event - 1 == selected_target)
                     
                     if ImGui.Selectable(player.name .. " (ID: " .. player.id ..")", is_selected) then
-                    	selected_target  = i - 1
+                    	selected_target  = event - 1
                     	target_player_id = player.id
                     end
                     

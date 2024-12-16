@@ -291,7 +291,7 @@ local function SHOULD_DISABLE_ESP()
         not CAM.IS_GAMEPLAY_CAM_RENDERING() or
         HUD.IS_HUD_COMPONENT_ACTIVE(16) or  -- HUD_RADIO_STATIONS
         HUD.IS_HUD_COMPONENT_ACTIVE(19) or  -- HUD_WEAPON_WHEEL
-        globals.get_int(23692 + 4) == 1     -- Is selector UI rendering
+        globals.get_int(23831 + 4) == 1     -- Is selector UI rendering
 end
 
 local function GET_FMMC_TYPE_OF_EVENT(event)

@@ -118,7 +118,7 @@ local RE = {
             [2] = 0x23150D, -- Cerberus Surprise
             [3] = 0x22D93C, -- The Gooch
             [4] = 0x22DA1D, -- Possessed Animals
-            [5] = 0xCE47    -- Ghosts Exposed
+            [5] = 0xCE8B    -- Ghosts Exposed
         }
     },
     SCRIPTS = {

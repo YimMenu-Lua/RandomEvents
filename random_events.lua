@@ -3,9 +3,9 @@ local re_tab = gui.get_tab("GUI_TAB_NETWORK"):add_tab("Random Events")
 local RE = {
     CORE = {
     	REQUEST_RE_HASH = -126218586,
-    	GSBD_RE         = 1882379,
-    	GPBD_FM_2       = 1882780,
-    	FMRE_DATA       = 15827
+    	GSBD_RE         = 1882120,
+    	GPBD_FM_2       = 1882572,
+    	FMRE_DATA       = 16076
     },
     IDS = {
     	DRUG_VEHICLE       = 0,
@@ -28,7 +28,10 @@ local RE = {
     	POSSESSED_ANIMALS  = 17,
     	GHOSTHUNT          = 18,
     	XMAS_TRUCK         = 19,
-    	COMMUNITY_OUTREACH = 20
+    	COMMUNITY_OUTREACH = 20,
+    	GETAWAY_DRIVER     = 21,
+    	SURVIVAL_GROUPING  = 22,
+    	VALENTINE_CHEATER  = 23
     },
     STATES = {
     	INACTIVE  = 0,
@@ -38,87 +41,97 @@ local RE = {
     },
     LOCALS = {
         END_REASONS = {
-            [0]  = { 1820, 115 },
-            [1]  = { 1947, 137 },
-            [2]  = { 1833, 93  },
-            [3]  = { 1621, 83  },
-            [4]  = { 1650, 83  },
-            [5]  = { 1630, 83  },
-            [6]  = { 1875, 84  },
-            [7]  = { 2122, 130 },
-            [8]  = { 1642, 91  },
-            [9]  = { 1894, 178 },
-            [10] = { 2023, 151 },
-            [11] = { 1881, 93  },
-            [12] = { 2812, 437 },
-            [13] = { 1809, 87  },
-            [14] = { 1673, 83  },
-            [15] = { 2284, 221 },
-            [16] = { 1975, 113 },
-            [17] = { 1646, 83  },
-            [18] = { 1606, 88  },
-            [19] = { 1520, 91  },
-            [20] = { 2066, 191 }
+            [0]  = { 1861, 116 },
+            [1]  = { 1987, 138 },
+            [2]  = { 1870, 94  },
+            [3]  = { 1658, 84  },
+            [4]  = { 1687, 84  },
+            [5]  = { 1667, 84  },
+            [6]  = { 1914, 85  },
+            [7]  = { 2159, 131 },
+            [8]  = { 1680, 93  },
+            [9]  = { 1931, 179 },
+            [10] = { 2060, 152 },
+            [11] = { 1918, 94  },
+            [12] = { 2885, 442 },
+            [13] = { 1858, 88  },
+            [14] = { 1710, 84  },
+            [15] = { 2322, 223 },
+            [16] = { 2015, 114 },
+            [17] = { 1683, 84  },
+            [18] = { 1644, 89  },
+            [19] = { 1561, 93  },
+            [20] = { 1771, 109 },
+            [21] = { 2396, 109 },
+            [22] = { 1708, 84  },
+            [23] = { 2092, 114 }
         },
         COORD_COOLDOWNS = {
-            [0]  = { 1820, 146 },
-            [1]  = { 1947, 168 },
-            [2]  = { 1833, 128 },
-            [3]  = { 1621, 114 },
-            [4]  = { 1650, 114 },
-            [5]  = { 1630, 114 },
-            [6]  = { 1875, 115 },
-            [7]  = { 2122, 166 },
-            [8]  = { 1642, 122 },
-            [9]  = { 1894, 209 },
-            [10] = { 2023, 186 },
-            [11] = { 1881, 129 },
-            [12] = { 2812, 470 },
-            [13] = { 1809, 124 },
-            [14] = { 1673, 114 },
-            [15] = { 2284, 256 },
-            [16] = { 1975, 148 },
-            [17] = { 1646, 114 },
-            [18] = { 1606, 119 },
-            [19] = { 1520, 122 },
-            [20] = { 2066, 229 }
+            [0]  = { 1861, 147 },
+            [1]  = { 1987, 169 },
+            [2]  = { 1870, 129 },
+            [3]  = { 1658, 115 },
+            [4]  = { 1687, 115 },
+            [5]  = { 1667, 115 },
+            [6]  = { 1914, 116 },
+            [7]  = { 2159, 167 },
+            [8]  = { 1680, 124 },
+            [9]  = { 1931, 210 },
+            [10] = { 2060, 187 },
+            [11] = { 1918, 130 },
+            [12] = { 2885, 475 },
+            [13] = { 1858, 125 },
+            [14] = { 1710, 115 },
+            [15] = { 2322, 258 },
+            [16] = { 2015, 149 },
+            [17] = { 1683, 115 },
+            [18] = { 1644, 120 },
+            [19] = { 1561, 124 },
+            [20] = { 1771, 140 },
+            [21] = { 2396, 144 },
+            [22] = { 1708, 115 },
+            [23] = { 2092, 150 }
         }
     },
     FUNC_POINTERS = {
-        FM_RETURN_TRUE  = 0x76BC,
-        FM_RETURN_FALSE = 0x7E4A0,
+        FM_RETURN_TRUE  = 0x76BA,
+        FM_RETURN_FALSE = 0x820E8,
         SHOULD_TRIGGER = {
             -- *_SHOULD_TRIGGER functions determine if the event can progress to the Active state from the Available state.
             -- There are also the *_SHOULD_BE_AVAILABLE functions, which determine if the event can progress to the Available state from the Inactive state. The events that have this function don't have any special conditions to be triggered in their SHOULD_TRIGGER functions, they just return true.
-            [0]  = 0x2C9317,
-            [1]  = 0x2C922B,
-            [2]  = 0x2C91FE,
-            [3]  = 0x2C91C0,
-            [4]  = 0x2C85A7,
-            [5]  = 0x2C8247, -- PHANTOM_CAR_SHOULD_BE_AVAILABLE
-            [6]  = 0x2C8165,
-            [7]  = 0x2C8122,
-            [8]  = 0x2C7E69,
-            [9]  = 0x2C7E11,
-            [10] = 0x2C7DC6,
-            [11] = 0x2C7D7B,
-            [12] = 0x2C7D2D,
-            [13] = 0x2C7CDF,
-            [14] = 0x2C798E, -- XMAS_MUGGER_SHOULD_BE_AVAILABLE
-            [15] = 0x2C790E,
-            [16] = 0x2C78B4,
-            [17] = 0x2C7732,
-            [18] = 0x2C73C6,
-            [19] = 0x2C7390, -- XMAS_TRUCK_SHOULD_BE_AVAILABLE
-            [20] = 0x2C72E8
+            [0]  = 0x2EA9E8,
+            [1]  = 0x2EA8FA,
+            [2]  = 0x2EA8CD,
+            [3]  = 0x2EA88F,
+            [4]  = 0x2E9C76,
+            [5]  = 0x2E9915, -- PHANTOM_CAR_SHOULD_BE_AVAILABLE
+            [6]  = 0x2E9832,
+            [7]  = 0x2E97EF,
+            [8]  = 0x2E9538,
+            [9]  = 0x2E94E0,
+            [10] = 0x2E9495,
+            [11] = 0x2E944A,
+            [12] = 0x2E93FC,
+            [13] = 0x2E93AE,
+            [14] = 0x2E905D, -- XMAS_MUGGER_SHOULD_BE_AVAILABLE
+            [15] = 0x2E8FDD,
+            [16] = 0x2E8F83,
+            [17] = 0x2E8E01,
+            [18] = 0x2E8A74,
+            [19] = 0x2E8A3E, -- XMAS_TRUCK_SHOULD_BE_AVAILABLE
+            [20] = 0x2E88A6, -- COMMUNITY_OUTREACH_SHOULD_BE_AVAILABLE
+            [21] = 0x2E8845,
+            [22] = 0x2E870A,
+            [23] = 0x2E866B
         },
         REAL_COORDS = {
-            [0] = 0x22CB46, -- The Slashers
-            [1] = 0x22D489, -- Phantom Car
-            [2] = 0x23150D, -- Cerberus Surprise
-            [3] = 0x22D93C, -- The Gooch
-            [4] = 0x22DA1D, -- Possessed Animals
-            [5] = 0xCE8B    -- Ghosts Exposed
+            [0] = 0x2498E4, -- The Slashers
+            [1] = 0x24A1DC, -- Phantom Car
+            [2] = 0x24E264, -- Cerberus Surprise
+            [3] = 0x24A668, -- The Gooch
+            [4] = 0x24A342, -- Possessed Animals
+            [5] = 0xD02A,   -- Ghosts Exposed
+            [6] = 0x203B36  -- Stoner Survival
         }
     },
     SCRIPTS = {
@@ -142,7 +155,10 @@ local RE = {
         [17] = "fm_content_possessed_animals",
         [18] = "fm_content_ghosthunt",
         [19] = "fm_content_xmas_truck",
-        [20] = "fm_content_community_outreach"
+        [20] = "fm_content_community_outreach",
+        [21] = "fm_content_getaway_driver",
+        [22] = "fm_content_survival_grouping",
+        [23] = "fm_content_valentine_cheater"
     },
     COOLDOWNS = {
         [0]  = "SUM22_RE_DRUG_VEHICLE_INACTIVE_TIME",
@@ -161,11 +177,14 @@ local RE = {
         [13] = "XM22_RE_ROBBERY_INACTIVE_TIME",
         [14] = "STANDARD_KEYBIND_COOLDOWN",
         [15] = "XM22_RE_BANK_SHOOTOUT_INACTIVE_TIME",
-        [16] = 295362, -- Global_262145.f_33217 - Armored Truck (doesn't have a tunable)
+        [16] = 262145 + 33305, -- Armored Truck (doesn't have a tunable)
         [17] = "STANDARDCONTROLLERVOLUME_COOLDOWN",
         [18] = "SUM23_RE_GHOSTHUNT_INACTIVE_TIME",
         [19] = "XMAS_TRUCK_INACTIVE_TIME",
-        [20] = "RE_COMMUNITY_OUTREACH_INACTIVE_TIME"
+        [20] = "RE_COMMUNITY_OUTREACH_INACTIVE_TIME",
+        [21] = "RE_GETAWAY_DRIVER_INACTIVE_TIME",
+        [22] = "RE_SURVIVAL_GROUPING_INACTIVE_TIME",
+        [23] = "RE_VALENTINES_CHEATER_INACTIVE_TIME"
     },
     AVAILABILITIES = {
         [0]  = "SUM22_RE_DRUG_VEHICLE_AVAILABLE_TIME",
@@ -184,11 +203,14 @@ local RE = {
         [13] = "XM22_RE_ROBBERY_AVAILABLE_TIME",
         [14] = "STANDARD_KEYBIND_AVAILABILITY",
         [15] = "XM22_RE_BANK_SHOOTOUT_AVAILABLE_TIME",
-        [16] = 295363, -- Global_262145.f_33218 - Armored Truck (doesn't have a tunable)
+        [16] = 262145 + 33306, -- Armored Truck (doesn't have a tunable)
         [17] = "STANDARDCONTROLLERVOLUME_AVAILABILITY",
         [18] = "SUM23_RE_GHOSTHUNT_AVAILABLE_TIME",
         [19] = "XMAS_TRUCK_AVAILABLE_TIME",
-        [20] = "RE_COMMUNITY_OUTREACH_AVAILABLE_TIME"
+        [20] = "RE_COMMUNITY_OUTREACH_AVAILABLE_TIME",
+        [21] = "RE_GETAWAY_DRIVER_AVAILABLE_TIME",
+        [22] = "RE_SURVIVAL_GROUPING_AVAILABLE_TIME",
+        [23] = "RE_VALENTINES_CHEATER_AVAILABLE_TIME"
     },
     NAMES = {
         [0]  = "Drug Vehicle",
@@ -211,7 +233,10 @@ local RE = {
         [17] = "Possessed Animals",
         [18] = "Ghosts Exposed",
         [19] = "Happy Holidays Hauler",
-        [20] = "Community Outreach"
+        [20] = "Community Outreach",
+        [21] = "Getaway Driver",
+        [22] = "Stoner Survival",
+        [23] = "Valentine Cheater"
     }
 }
 
@@ -291,11 +316,11 @@ local function SHOULD_DISABLE_ESP()
         not CAM.IS_GAMEPLAY_CAM_RENDERING() or
         HUD.IS_HUD_COMPONENT_ACTIVE(16) or  -- HUD_RADIO_STATIONS
         HUD.IS_HUD_COMPONENT_ACTIVE(19) or  -- HUD_WEAPON_WHEEL
-        globals.get_int(23831 + 4) == 1     -- Is selector UI rendering
+        globals.get_int(24390 + 4) == 1     -- Is selector UI rendering
 end
 
 local function GET_FMMC_TYPE_OF_EVENT(event)
-    return locals.get_int("freemode", RE.CORE.FMRE_DATA + 253 + 1 + (event + 1))
+    return locals.get_int("freemode", RE.CORE.FMRE_DATA + 289 + 1 + (event + 1))
 end
 
 local function REGISTER_MAX_VARIATIONS()
@@ -306,7 +331,7 @@ local function REGISTER_MAX_VARIATIONS()
     if script.is_active("freemode") and re_initialized then
         for event = 0, max_num_re do
             local fmmc_type     = GET_FMMC_TYPE_OF_EVENT(event)
-            local max_variation = scr_function.call_script_function("freemode", "GMFV", "2D 02 04 00 00 38 00 55", "int", {
+            local max_variation = scr_function.call_script_function("freemode", "GMFV", "2D 02 04 00 00 38 00 65 ? 96 00 00 00 ? ? 18", "int", { -- This function used to sit at the end of a code page, so it had a J (0x55) after the prologue to skip the NOP padding, which made the old pattern unique. But as of 1.71, this is no longer the case, so we wildcard the switch case count and relative offsets instead to keep the pattern unique. No need to wildcard the case values since FMMC IDs don’t change.
                 { "int", fmmc_type },
                 { "int", 0 }
             })
@@ -328,7 +353,7 @@ end
 
 local function HOOK_SHOULD_TRIGGER_FUNCTIONS(value)
     for event = 0, max_num_re do
-        if event == RE.IDS.PHANTOM_CAR or event == RE.IDS.XMAS_MUGGER or event == RE.IDS.XMAS_TRUCK then
+        if event == RE.IDS.PHANTOM_CAR or event == RE.IDS.XMAS_MUGGER or event == RE.IDS.XMAS_TRUCK or event == RE.IDS.COMMUNITY_OUTREACH then
             locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 5, value)
         else
             locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 1 + 1, value)
@@ -338,7 +363,7 @@ end
 
 local function RESTORE_SHOULD_TRIGGER_FUNCTIONS()
     for event = 0, max_num_re do
-        if event == RE.IDS.PHANTOM_CAR or event == RE.IDS.XMAS_MUGGER or event == RE.IDS.XMAS_TRUCK then
+        if event == RE.IDS.PHANTOM_CAR or event == RE.IDS.XMAS_MUGGER or event == RE.IDS.XMAS_TRUCK or event == RE.IDS.COMMUNITY_OUTREACH then
             locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 5, RE.FUNC_POINTERS.SHOULD_TRIGGER[event])
         else
             locals.set_int("freemode", RE.CORE.FMRE_DATA + (1 + (event * 12)) + 1 + 1, RE.FUNC_POINTERS.SHOULD_TRIGGER[event])
@@ -348,25 +373,28 @@ end
 
 -- The original functions return a null vector, preventing the script event from updating the initial trigger point's value. To resolve this, I replace the local pointers with the addresses of functions that actually return the event's coordinates.
 local function PATCH_EVENT_COORDS()
-    -- The game crashes on session change if event set the values in a loop when script is not active for some reason.
+    -- The game crashes on session change if I set the values in a loop when script is not active for some reason.
     if script.is_active("fm_content_slasher") then
-        locals.set_int("fm_content_slasher", 426 + 108, RE.FUNC_POINTERS.REAL_COORDS[0])
+        locals.set_int("fm_content_slasher", 430 + 111, RE.FUNC_POINTERS.REAL_COORDS[0])
     end
     if script.is_active("fm_content_phantom_car") then
-    	locals.set_int("fm_content_phantom_car", 409 + 108, RE.FUNC_POINTERS.REAL_COORDS[1])
+    	locals.set_int("fm_content_phantom_car", 413 + 111, RE.FUNC_POINTERS.REAL_COORDS[1])
     end
     if script.is_active("fm_content_cerberus") then
-    	locals.set_int("fm_content_cerberus", 424 + 108, RE.FUNC_POINTERS.REAL_COORDS[2])
+    	locals.set_int("fm_content_cerberus", 428 + 111, RE.FUNC_POINTERS.REAL_COORDS[2])
     end
     if script.is_active("fm_content_xmas_mugger") then
-    	locals.set_int("fm_content_xmas_mugger", 438 + 108, RE.FUNC_POINTERS.REAL_COORDS[3])
+    	locals.set_int("fm_content_xmas_mugger", 442 + 111, RE.FUNC_POINTERS.REAL_COORDS[3])
     end
     if script.is_active("fm_content_possessed_animals") then
-    	locals.set_int("fm_content_possessed_animals", 422 + 108, RE.FUNC_POINTERS.REAL_COORDS[4])
+    	locals.set_int("fm_content_possessed_animals", 426 + 111, RE.FUNC_POINTERS.REAL_COORDS[4])
     end
     if script.is_active("fm_content_ghosthunt") then
-        locals.set_int("fm_content_ghosthunt", 442 + 108, RE.FUNC_POINTERS.REAL_COORDS[5])
-    end	
+        locals.set_int("fm_content_ghosthunt", 446 + 111, RE.FUNC_POINTERS.REAL_COORDS[5])
+    end
+    if script.is_active("fm_content_survival_grouping") then
+        locals.set_int("fm_content_survival_grouping", 424 + 111, RE.FUNC_POINTERS.REAL_COORDS[6]) -- The script uses this for something else as well.
+    end
 end
 
 local function RESET_UPDATE_EVENT_COORDS_COOLDOWN()
@@ -397,8 +425,9 @@ local function SET_EVENT_AVAILABILITY(event, value)
 end
 
 local function SET_EVENT_TARGET(target_id)
-    globals.set_int(RE.CORE.GSBD_RE + 319, target_id) -- Phantom Car Target
-    globals.set_int(RE.CORE.GSBD_RE + 319 + 1, target_id) -- The Gooch Target
+    globals.set_int(RE.CORE.GSBD_RE + 364, target_id)     -- Phantom Car Target
+    globals.set_int(RE.CORE.GSBD_RE + 364 + 1, target_id) -- The Gooch Target
+    globals.set_int(RE.CORE.GSBD_RE + 364 + 2, target_id) -- Community Outreach Target
 end
 
 local function SET_EVENT_END_REASON(event, reason)
@@ -419,6 +448,8 @@ local function SET_SPECIAL_EVENT_TUNABLES(toggle)
     tunables.set_bool("ENABLE_HALLOWEEN_GHOSTHUNT", toggle)
     tunables.set_bool(-818123201, toggle) -- This will invalidate ENABLE_HALLOWEEN_GHOSTHUNT.
     tunables.set_bool(2093114948, toggle)
+    tunables.set_bool("ENABLE_RE_SURVIVAL_GROUPING", toggle)
+    tunables.set_bool("ENABLE_RE_VALENTINES_CHEATER", toggle)
 end
 
 local function CHECK_EVENT_TUNABLES()
@@ -443,14 +474,17 @@ local function CHECK_EVENT_TUNABLES()
     is_tunable_active[RE.IDS.GHOSTHUNT]          = tunables.get_bool("ENABLE_HALLOWEEN_GHOSTHUNT") or tunables.get_bool(-818123201)
     is_tunable_active[RE.IDS.XMAS_TRUCK]         = tunables.get_bool(2093114948)
     is_tunable_active[RE.IDS.COMMUNITY_OUTREACH] = tunables.get_bool("ENABLE_RE_COMMUNITY_OUTREACH")
+    is_tunable_active[RE.IDS.GETAWAY_DRIVER]     = tunables.get_bool("ENABLE_RE_GETAWAY_DRIVER")
+    is_tunable_active[RE.IDS.SURVIVAL_GROUPING]  = tunables.get_bool("ENABLE_RE_SURVIVAL_GROUPING")
+    is_tunable_active[RE.IDS.VALENTINE_CHEATER]  = tunables.get_bool("ENABLE_RE_VALENTINES_CHEATER")
 end
 
 local function ARE_EVENTS_INITIALIZED()
-    return globals.get_int(RE.CORE.GPBD_FM_2 + (1 + (self.get_id() * 149)) + 82) == 1
+    return globals.get_int(RE.CORE.GPBD_FM_2 + (1 + (self.get_id() * 315)) + 82) == 1
 end
 
 local function GET_MAX_NUMBER_OF_EVENTS()
-    return locals.get_int("freemode", RE.CORE.FMRE_DATA + 253) - 1
+    return locals.get_int("freemode", RE.CORE.FMRE_DATA + 289) - 1
 end
 
 local function GET_MAX_NUMBER_OF_ACTIVATED_EVENTS_COUNT()
@@ -458,7 +492,7 @@ local function GET_MAX_NUMBER_OF_ACTIVATED_EVENTS_COUNT()
 end
 
 local function GET_PLAYER_STATE(event, player_id)
-    return globals.get_int(RE.CORE.GPBD_FM_2 + (1 + (player_id * 149)) + 82 + 1 + (1 + (event * 3)))
+    return globals.get_int(RE.CORE.GPBD_FM_2 + (1 + (player_id * 315)) + 82 + 1 + (1 + (event * 3)))
 end
 
 local function GET_EVENT_STATE(event)
@@ -886,7 +920,7 @@ re_tab:add_imgui(function()
         ImGui.Separator()
         
         set_target_player, on_tick = ImGui.Checkbox("Set Target Player", set_target_player)
-        HELP_MARKER("Allows you to set the target of Phantom Car and Gooch.")
+        HELP_MARKER("Allows you to set the target of Phantom Car, Gooch, and Community Outreach.")
         
         if on_tick then
             if not set_target_player then
@@ -970,5 +1004,5 @@ re_tab:add_imgui(function()
         
         force_freemode_host = ImGui.Checkbox("Force Freemode Host", force_freemode_host)
         HELP_MARKER("Forces you to always become freemode host. It is required for script to work correctly.")
-    end	
+    end
 end)
